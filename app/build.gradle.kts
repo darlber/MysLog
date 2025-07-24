@@ -76,5 +76,7 @@ android {
         //Timber
         implementation(libs.timber)
 
+        // Material 3
+        implementation(libs.material3)
     }
 }

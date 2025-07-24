@@ -6,37 +6,41 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.example.exerlog.core.Entities.EXERCISE
+import com.example.exerlog.core.Entities.GYMSET
+import com.example.exerlog.core.Entities.SESSIONEXERCISE
+import com.example.exerlog.core.Entities.SESSIONWORKOUT
 import com.example.exerlog.db.entities.*
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ExerDAO {
 
-    @Query("SELECT * FROM sessions WHERE sessionId = :sessionId")
+    @Query("SELECT * FROM $SESSIONWORKOUT WHERE sessionId = :sessionId")
     fun getSessionById(sessionId: Long): Session
 
-    @Query("SELECT * FROM sets ORDER BY setId ASC")
+    @Query("SELECT * FROM $GYMSET ORDER BY setId ASC")
     fun getAllSets(): Flow<List<GymSet>>
 
-    @Query("SELECT * FROM sessions ORDER BY start DESC")
+    @Query("SELECT * FROM $SESSIONWORKOUT ORDER BY start DESC")
     fun getAllSessions(): Flow<List<Session>>
 
-    @Query("SELECT * FROM sessions ORDER BY sessionId DESC LIMIT 1")
+    @Query("SELECT * FROM $SESSIONWORKOUT ORDER BY sessionId DESC LIMIT 1")
     fun getLastSession(): Session
 
-    @Query("SELECT * FROM exercises ORDER BY title ASC")
+    @Query("SELECT * FROM $EXERCISE ORDER BY title ASC")
     fun getAllExercises(): Flow<List<Exercise>>
 
-    @Query("SELECT * FROM sessionExercises join exercises ON sessionExercises.parentExerciseId = exercises.id")
+    @Query("SELECT * FROM $SESSIONEXERCISE join $EXERCISE ON $SESSIONEXERCISE.parentExerciseId = $EXERCISE.id")
     fun getAllSessionExercises(): Flow<List<SessionExerciseWithExercise>>
 
-    @Query("SELECT * FROM sessionExercises JOIN exercises ON sessionExercises.parentExerciseId = exercises.id WHERE parentSessionId = :sessionId")
+    @Query("SELECT * FROM $SESSIONEXERCISE JOIN $EXERCISE ON $SESSIONEXERCISE.parentExerciseId = $EXERCISE.id WHERE parentSessionId = :sessionId")
     fun getExercisesForSession(sessionId: Long): Flow<List<SessionExerciseWithExercise>>
 
-    @Query("SELECT * FROM sets WHERE parentSessionExerciseId = :id ORDER BY setId ASC")
+    @Query("SELECT * FROM $GYMSET WHERE parentSessionExerciseId = :id ORDER BY setId ASC")
     fun getSetsForExercise(id: Long): Flow<List<GymSet>>
 
-    @Query("SELECT GROUP_CONCAT(targets,'|') FROM exercises as e JOIN sessionExercises as se ON e.id = se.parentExerciseId  WHERE se.parentSessionId = :sessionId")
+    @Query("SELECT GROUP_CONCAT(targets,'|') FROM $EXERCISE as e JOIN $SESSIONEXERCISE as se ON e.id = se.parentExerciseId  WHERE se.parentSessionId = :sessionId")
     fun getMuscleGroupsForSession(sessionId: Long): Flow<String>
 
     @Insert(onConflict = OnConflictStrategy.Companion.IGNORE)
@@ -65,27 +69,27 @@ interface ExerDAO {
     @Delete
     suspend fun deleteSet(set: GymSet)
 
-    @Query("SELECT * FROM sessions")
+    @Query("SELECT * FROM $SESSIONWORKOUT")
     fun getSessionList(): List<Session>
 
-    @Query("SELECT * FROM exercises")
+    @Query("SELECT * FROM $EXERCISE")
     fun getExerciseList(): List<Exercise>
 
-    @Query("SELECT * FROM sessionExercises")
+    @Query("SELECT * FROM $SESSIONEXERCISE")
     fun getSessionExerciseList(): List<SessionExercise>
 
-    @Query("SELECT * FROM sets")
+    @Query("SELECT * FROM $GYMSET")
     fun getSetList(): List<GymSet>
 
-    @Query("DELETE FROM sessions")
+    @Query("DELETE FROM $SESSIONWORKOUT")
     suspend fun clearSessions()
 
-    @Query("DELETE FROM sessionExercises")
+    @Query("DELETE FROM $SESSIONEXERCISE")
     suspend fun clearSessionExercises()
 
-    @Query("DELETE FROM sets")
+    @Query("DELETE FROM $GYMSET")
     suspend fun clearSets()
 
-    @Query("DELETE FROM exercises")
+    @Query("DELETE FROM $EXERCISE")
     suspend fun clearExercises()
 }

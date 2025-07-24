@@ -2,8 +2,9 @@ package com.example.exerlog.db.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.example.exerlog.core.Entities.EXERCISE
 
-@Entity(tableName = "exercises")
+@Entity(tableName = EXERCISE)
 data class Exercise(
     @PrimaryKey(autoGenerate = true)
     var id: Long = 0L,

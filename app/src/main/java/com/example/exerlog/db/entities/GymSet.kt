@@ -3,13 +3,15 @@ package com.example.exerlog.db.entities
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.example.exerlog.db.TipoSet
+import com.example.exerlog.core.Entities.GYMSET
+import com.example.exerlog.core.TipoSet
+
 
 /**
  * A SessionExercise can have multiple Sets associated with it.
  * Each Set is a number of reps with a specific weight (if applicable)
  */
-@Entity(tableName = "sets")
+@Entity(tableName = GYMSET)
 data class GymSet(
     @PrimaryKey(autoGenerate = true)
     val setId: Long = 0L,

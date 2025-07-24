@@ -4,8 +4,9 @@ import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.example.exerlog.core.Entities.SESSIONEXERCISE
 
-@Entity(tableName = "sessionExercises")
+@Entity(tableName = SESSIONEXERCISE)
 data class SessionExercise(
     //Primary key es una llave primaria,
     // autoGenerate significa que se autogenera un id único para cada
