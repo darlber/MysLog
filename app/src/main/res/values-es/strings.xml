@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ExerLog</string>
+
+    <!-- equipment -->
+    <string name="equipment_atlas_stone">Piedra Atlas</string>
+    <string name="equipment_barbell">Barra</string>
+    <string name="equipment_bodyweight">Peso corporal</string>
+    <string name="equipment_broom_stick">Escoba</string>
+    <string name="equipment_cable">Cable</string>
+    <string name="equipment_dumbbells">Mancuernas</string>
+    <string name="equipment_kettlebell">Kettlebell</string>
+    <string name="equipment_lever">Palanca</string>
+    <string name="equipment_machine">Máquina</string>
+    <string name="equipment_medicine_ball">Balón medicinal</string>
+    <string name="equipment_resistance_band">Bandas de resistencia</string>
+    <string name="equipment_rope">Cuerda</string>
+    <string name="equipment_rope_machine">Máquina de cuerda</string>
+    <string name="equipment_sled">Trineo</string>
+    <string name="equipment_smith_machine">Máquina Smith</string>
+    <string name="equipment_stability_ball">Balón de estabilidad</string>
+    <string name="equipment_suspension">Suspensión</string>
+    <string name="equipment_weight">Peso</string>
+
+    <!-- muscle groups -->
+    <string name="muscle_core">Core</string>
+    <string name="muscle_hips">Caderas</string>
+    <string name="muscle_calves">Pantorrillas</string>
+    <string name="muscle_glutes">Glúteos</string>
+    <string name="muscle_hamstrings">Isquiotibiales</string>
+    <string name="muscle_quadriceps">Cuádriceps</string>
+    <string name="muscle_back">Espalda</string>
+    <string name="muscle_neck">Cuello</string>
+    <string name="muscle_biceps">Bíceps</string>
+    <string name="muscle_forearms">Antebrazos y muñecas</string>
+    <string name="muscle_triceps">Tríceps</string>
+    <string name="muscle_chest">Pecho</string>
+    <string name="muscle_shoulders">Hombros</string>
+
+    <!-- tipo set -->
+    <string name="tipo_warmup">Calentamiento</string>
+    <string name="tipo_easy">Fácil</string>
+    <string name="tipo_normal">Normal</string>
+    <string name="tipo_hard">Difícil</string>
+    <string name="tipo_drop">Drop</string>
+</resources>

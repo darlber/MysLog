@@ -24,5 +24,6 @@ data class GymSet(
 
     //TODO: distance is not used in the app, but could be useful for running or cycling
     val distance: Float? = null,
-    val tipoSet: String = TipoSet.NORMAL
+    val tipoSet: Int = TipoSet.NORMAL
+
 )

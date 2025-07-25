@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.Flow
 interface ExerDAO {
 
     @Query("SELECT * FROM $SESSIONWORKOUT WHERE sessionId = :sessionId")
-    fun getSessionById(sessionId: Long): Session
+    fun getSessionById(sessionId: Long): Flow<Session>
 
     @Query("SELECT * FROM $GYMSET ORDER BY setId ASC")
     fun getAllSets(): Flow<List<GymSet>>

@@ -17,10 +17,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.compose.AppTheme
 import com.example.exerlog.db.entities.Session
 import com.example.exerlog.ui.SessionWrapper
 import com.example.exerlog.ui.home.components.HomeBottomBar
 import com.example.exerlog.ui.home.components.SessionCard
+import com.example.exerlog.utils.UiEvent
 import java.time.LocalDateTime
 
 // Dato dummy para Session
@@ -44,14 +46,11 @@ val sampleSessions = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    onNavigate: (UiEvent.Navigate) -> Unit,
     sessions: List<SessionWrapper> = sampleSessions,
     onSessionClick: (SessionWrapper) -> Unit = {}
 ) {
-    Scaffold(
-        topBar = {
-            TopAppBar(title = { Text("Home") })
-        }
-    ) { padding ->
+    Scaffold { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -89,5 +88,28 @@ fun HomeScreen(
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
-    HomeScreen()
+    AppTheme(
+        darkTheme = true,
+        dynamicColor = true
+    ) {
+        HomeScreen(
+            onNavigate = {},
+            sessions = sampleSessions,
+            onSessionClick = {}
+        )
+    }
+}
+@Preview(showBackground = true)
+@Composable
+fun HomeScreenPreview2() {
+    AppTheme(
+        darkTheme = false,
+        dynamicColor = false
+    ) {
+        HomeScreen(
+            onNavigate = {},
+            sessions = sampleSessions,
+            onSessionClick = {}
+        )
+    }
 }

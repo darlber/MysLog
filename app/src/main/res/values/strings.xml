@@ -1,3 +1,46 @@
 <resources>
     <string name="app_name">ExerLog</string>
+
+    // equipment
+    <string name="equipment_atlas_stone">Atlas Stone</string>
+    <string name="equipment_barbell">Barbell</string>
+    <string name="equipment_bodyweight">Bodyweight</string>
+    <string name="equipment_broom_stick">Broom Stick</string>
+    <string name="equipment_cable">Cable</string>
+    <string name="equipment_dumbbells">Dumbbell</string>
+    <string name="equipment_kettlebell">Kettlebell</string>
+    <string name="equipment_lever">Lever</string>
+    <string name="equipment_machine">Machine</string>
+    <string name="equipment_medicine_ball">Medicine Ball</string>
+    <string name="equipment_resistance_band">Resistance Band</string>
+    <string name="equipment_rope">Rope</string>
+    <string name="equipment_rope_machine">Rope Machine</string>
+    <string name="equipment_sled">Sled</string>
+    <string name="equipment_smith_machine">Smith Machine</string>
+    <string name="equipment_stability_ball">Stability Ball</string>
+    <string name="equipment_suspension">Suspension</string>
+    <string name="equipment_weight">Weight</string>
+
+    //musclegroups
+    <string name="muscle_core">Core</string>
+    <string name="muscle_hips">Hips</string>
+    <string name="muscle_calves">Calves</string>
+    <string name="muscle_glutes">Glutes</string>
+    <string name="muscle_hamstrings">Hamstrings</string>
+    <string name="muscle_quadriceps">Quadriceps</string>
+    <string name="muscle_back">Back</string>
+    <string name="muscle_neck">Neck</string>
+    <string name="muscle_biceps">Biceps</string>
+    <string name="muscle_forearms">Forearms and Wrists</string>
+    <string name="muscle_triceps">Triceps</string>
+    <string name="muscle_chest">Chest</string>
+    <string name="muscle_shoulders">Shoulders</string>
+
+    //tiposet
+    <string name="tipo_warmup">Warmup</string>
+    <string name="tipo_easy">Easy</string>
+    <string name="tipo_normal">Normal</string>
+    <string name="tipo_hard">Hard</string>
+    <string name="tipo_drop">Drop</string>
 </resources>
+

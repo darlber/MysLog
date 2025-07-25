@@ -19,13 +19,13 @@ interface ExerRepository {
     fun getExercisesForSession(session: Session): Flow<List<SessionExerciseWithExercise>>
     fun getSetsForExercise(sessionExerciseId: Long): Flow<List<GymSet>>
     fun getMuscleGroupsForSession(session: Session): Flow<List<String>>
-    suspend fun insertExercise(exercise: Exercise)
-    suspend fun insertSession(session: Session)
+    suspend fun insertExercise(exercise: Exercise): Long
+    suspend fun insertSession(session: Session): Long
     suspend fun removeSession(session: Session)
     suspend fun updateSession(session: Session)
-    suspend fun insertSessionExercise(sessionExercise: SessionExercise)
+    suspend fun insertSessionExercise(sessionExercise: SessionExercise): Long
     suspend fun removeSessionExercise(sessionExercise: SessionExercise)
-    suspend fun insertSet(gymSet: GymSet)
+    suspend fun insertSet(gymSet: GymSet): Long
     suspend fun updateSet(set: GymSet)
     suspend fun deleteSet(set: GymSet)
     suspend fun createSet(sessionExercise: SessionExercise): Long

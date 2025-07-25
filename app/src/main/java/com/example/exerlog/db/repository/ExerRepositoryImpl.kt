@@ -40,10 +40,12 @@ class GymRepositoryImpl(
 
     override fun getSetsForExercise(sessionExerciseId: Long) = dao.getSetsForExercise(sessionExerciseId)
 
-    override fun getMuscleGroupsForSession(session: Session): Flow<List<String>> {
+    //TODO: alavergawey, habra que rehacer toda la base de datos para usar otros exercises.
+   override fun getMuscleGroupsForSession(session: Session): Flow<List<String>> {
         return dao.getMuscleGroupsForSession(session.sessionId).mapNotNull {
             try {
-                turnTargetIntoMuscleGroups(it)
+                emptyList()
+                //turnTargetIntoMuscleGroups(it)
             } catch (_: Exception) {
                 Timber.d("Error when converting target.")
                 emptyList()
