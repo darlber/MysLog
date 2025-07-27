@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+
 }
 
 android {
@@ -19,6 +20,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
     }
 
     buildTypes {
@@ -70,7 +72,6 @@ android {
 
         // Room
         implementation(libs.androidx.room.runtime)
-        annotationProcessor(libs.androidx.room.compiler)
         implementation(libs.androidx.room.ktx)
         ksp(libs.androidx.room.compiler)
         //Timber
@@ -78,5 +79,8 @@ android {
 
         // Material 3
         implementation(libs.material3)
+        //gson
+        implementation(libs.gson)
+
     }
 }
