@@ -12,8 +12,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.mapNotNull
 import timber.log.Timber
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class GymRepositoryImpl(
+@Singleton
+class ExerRepositoryImpl @Inject constructor(
     private val dao: ExerDAO
 ) : ExerRepository {
 

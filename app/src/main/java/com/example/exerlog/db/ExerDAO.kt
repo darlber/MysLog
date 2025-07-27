@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ExerDAO {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(exercises: List<Exercise>)
 
     @Query("SELECT * FROM $SESSIONWORKOUT WHERE sessionId = :sessionId")
     fun getSessionById(sessionId: Long): Flow<Session>
@@ -28,7 +30,7 @@ interface ExerDAO {
     @Query("SELECT * FROM $SESSIONWORKOUT ORDER BY sessionId DESC LIMIT 1")
     fun getLastSession(): Session
 
-    @Query("SELECT * FROM $EXERCISE ORDER BY title ASC")
+    @Query("SELECT * FROM $EXERCISE ORDER BY name ASC")
     fun getAllExercises(): Flow<List<Exercise>>
 
     @Query("SELECT * FROM $SESSIONEXERCISE join $EXERCISE ON $SESSIONEXERCISE.parentExerciseId = $EXERCISE.id")
@@ -40,7 +42,7 @@ interface ExerDAO {
     @Query("SELECT * FROM $GYMSET WHERE parentSessionExerciseId = :id ORDER BY setId ASC")
     fun getSetsForExercise(id: Long): Flow<List<GymSet>>
 
-    @Query("SELECT GROUP_CONCAT(targets,'|') FROM $EXERCISE as e JOIN $SESSIONEXERCISE as se ON e.id = se.parentExerciseId  WHERE se.parentSessionId = :sessionId")
+    @Query("SELECT GROUP_CONCAT(primaryMuscles,'|') FROM $EXERCISE as e JOIN $SESSIONEXERCISE as se ON e.id = se.parentExerciseId  WHERE se.parentSessionId = :sessionId")
     fun getMuscleGroupsForSession(sessionId: Long): Flow<String>
 
     @Insert(onConflict = OnConflictStrategy.Companion.IGNORE)

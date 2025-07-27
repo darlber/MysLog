@@ -1,5 +1,6 @@
 [versions]
 agp = "8.11.1"
+gson = "2.13.1"
 hiltAndroidGradlePlugin = "2.57"
 kotlin = "2.2.0"
 kotlinCompilerExtension = "1.5.0"
@@ -18,8 +19,11 @@ roomVersion = "2.7.2"
 hiltNavigationCompose = "1.2.0"
 timber = "5.0.1"
 
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+
 hilt-android-gradle-plugin = { module = "com.google.dagger:hilt-android-gradle-plugin", version.ref = "hiltAndroidGradlePlugin" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
