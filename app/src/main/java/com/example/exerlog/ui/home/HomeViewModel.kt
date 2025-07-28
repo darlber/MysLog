@@ -1,5 +1,8 @@
 package com.example.exerlog.ui.home
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.exerlog.core.Routes
@@ -22,18 +25,19 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val repo: ExerRepository
+
 ) : ViewModel() {
 
     // Combine sesiones y ejercicios de la sesión para generar SessionWrapper con músculos ordenados
     val sessions = combine(
-        repo.getAllSessionExercises(),
-        repo.getAllSessions()
+        repo.getAllSessionExercises(), repo.getAllSessions()
     ) { sewes, sessions ->
 
         sessions.map { session ->
             // Filtra SessionExerciseWithExercise que pertenecen a la sesión actual
-            val relatedExercises = sewes.filter { it.sessionExercise.parentSessionId == session.sessionId }
-                .map { it.exercise }
+            val relatedExercises =
+                sewes.filter { it.sessionExercise.parentSessionId == session.sessionId }
+                    .map { it.exercise }
 
             // Ahora, usando tu función para sacar músculos ordenados
             val muscleGroups = relatedExercises.sortedListOfMuscleGroups()
@@ -45,6 +49,7 @@ class HomeViewModel @Inject constructor(
     // Canal para eventos UI
     private val _uiEvent = Channel<UiEvent>()
     val uiEvent = _uiEvent.receiveAsFlow()
+    var sessionToDelete by mutableStateOf<SessionWrapper?>(null)
 
     fun onEvent(event: HomeEvent) {
         when (event) {
@@ -52,11 +57,25 @@ class HomeViewModel @Inject constructor(
                 Timber.d("User clicked on session with id: ${event.sessionWrapper.session.sessionId}, name: ${event.sessionWrapper.session.sessionId}")
                 sendUiEvent(UiEvent.Navigate("${Routes.SESSION}/${event.sessionWrapper.session.sessionId}"))
             }
+
+            is HomeEvent.DeleteSessionRequested -> {
+                sessionToDelete = event.sessionWrapper
+            }
+
+            is HomeEvent.ConfirmDeleteSession -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    repo.deleteSessionById(event.sessionId)
+                    Timber.d("Session ${event.sessionId} deleted.")
+                    sessionToDelete = null
+                }
+            }
+
             is HomeEvent.OpenSettings -> {
                 sendUiEvent(UiEvent.Navigate(Routes.SETTINGS))
             }
+
             is HomeEvent.NewSession -> {
-                Timber.d("User clicked on new Session" )
+                Timber.d("User clicked on new Session")
                 viewModelScope.launch(Dispatchers.IO) {
                     repo.insertSession(Session())
                     val session = repo.getLastSession()

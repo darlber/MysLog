@@ -1,11 +1,13 @@
 package com.example.exerlog.db.repository
 
 import com.example.exerlog.db.ExerDAO
+import com.example.exerlog.db.GymDatabase
 import com.example.exerlog.db.entities.Exercise
 import com.example.exerlog.db.entities.GymSet
 import com.example.exerlog.db.entities.Session
 import com.example.exerlog.db.entities.SessionExercise
 import com.example.exerlog.db.entities.SessionExerciseWithExercise
+import com.example.exerlog.di.DatabaseModule
 import com.example.exerlog.ui.DatabaseModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -17,7 +19,8 @@ import javax.inject.Singleton
 
 @Singleton
 class ExerRepositoryImpl @Inject constructor(
-    private val dao: ExerDAO
+    private val dao: ExerDAO,
+    private val  db: GymDatabase
 ) : ExerRepository {
 
     override fun getSessionById(sessionId: Long) = dao.getSessionById(sessionId)
@@ -88,9 +91,14 @@ class ExerRepositoryImpl @Inject constructor(
         )
 
     override suspend fun clearDatabase() {
-        dao.clearSessions()
-        dao.clearSessionExercises()
-        dao.clearExercises()
-        dao.clearSets()
+        db.clearAllTables()
+        db.query("DELETE FROM sqlite_sequence", null)
     }
+
+    override suspend fun deleteSessionById(sessionId: Long) {
+        dao.deleteSessionById(sessionId)
+    }
+
+
+
 }

@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.exerlog.core.Routes
 import com.example.exerlog.ui.home.HomeScreen
+import com.example.exerlog.ui.settings.SettingsScreen
 import com.example.exerlog.utils.UiEvent
 
 @Composable
@@ -23,8 +24,16 @@ fun AppNavHost(
                 onNavigate = { navController.navigationEvent(event = it) },
             )
         }
+        composable(Routes.SETTINGS) {
+            SettingsScreen()
+        }
 
     }
 }
 
-private fun NavHostController.navigationEvent(event: UiEvent.Navigate) {}
+private fun NavHostController.navigationEvent(event: UiEvent.Navigate) {
+    navigate(event.route) {
+        if (event.popBackStack) currentDestination?.route?.let { popUpTo(it) { inclusive = true } }
+        launchSingleTop = true
+    }
+}

@@ -94,4 +94,8 @@ interface ExerDAO {
 
     @Query("DELETE FROM $EXERCISE")
     suspend fun clearExercises()
+
+    @Query("DELETE FROM session WHERE sessionId = :sessionId")
+    suspend fun deleteSessionById(sessionId: Long)
+
 }

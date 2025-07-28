@@ -31,4 +31,5 @@ interface ExerRepository {
     suspend fun createSet(sessionExercise: SessionExercise): Long
     fun getDatabaseModel(): DatabaseModel
     suspend fun clearDatabase()
+    suspend fun deleteSessionById(sessionId: Long)
 }
