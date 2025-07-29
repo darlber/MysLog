@@ -2,6 +2,7 @@ package com.example.exerlog.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.exerlog.core.Routes
 import com.example.exerlog.db.repository.ExerRepository
 import com.example.exerlog.utils.Event
 import com.example.exerlog.utils.UiEvent
@@ -43,6 +44,7 @@ class SettingsViewModel @Inject constructor(
                 viewModelScope.launch(Dispatchers.IO) {
                     repo.clearDatabase()
                     Timber.d("Database cleared")
+                    _uiEvent.send(UiEvent.Navigate(Routes.HOME))  // Volver al Home
                 }
             }
         }

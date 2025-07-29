@@ -35,7 +35,7 @@ fun HomeScreen(
         AlertDialog(
             onDismissRequest = { viewModel.sessionToDelete = null },
             title = { Text("Eliminar sesión") },
-            text = { Text("¿Estás seguro de que querés eliminar esta sesión?") },
+            text = { Text("¿Estás seguro de que quieres eliminar esta sesión?") },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.onEvent(HomeEvent.ConfirmDeleteSession(sessionToDelete.session.sessionId))

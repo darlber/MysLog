@@ -98,4 +98,6 @@ interface ExerDAO {
     @Query("DELETE FROM session WHERE sessionId = :sessionId")
     suspend fun deleteSessionById(sessionId: Long)
 
+    @Query("DELETE FROM sqlite_sequence WHERE name = '$SESSIONWORKOUT'")
+    suspend fun deletePrimaryKeyIndex()
 }

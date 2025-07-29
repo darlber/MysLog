@@ -19,11 +19,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import com.example.exerlog.utils.UiEvent
 
 @Composable
 fun SettingsScreen(
-    viewModel: SettingsViewModel = hiltViewModel()
+    viewModel: SettingsViewModel = hiltViewModel(),
+    navController: NavHostController
 ) {
     val mContext = LocalContext.current
     val exportLauncher = rememberLauncherForActivityResult(
@@ -49,6 +51,7 @@ fun SettingsScreen(
                 is UiEvent.FileCreated -> {
                     exportLauncher.launch(event.fileName)
                 }
+                is UiEvent.Navigate -> navController.navigate(event.route)
                 else -> Unit
             }
         }
@@ -84,5 +87,5 @@ fun SettingsScreen(
 @Preview
 @Composable
 fun SettingsDialogPreview() {
-    SettingsScreen()
+    SettingsScreen(navController = NavHostController(LocalContext.current))
 }

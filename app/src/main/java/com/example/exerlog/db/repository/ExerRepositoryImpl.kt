@@ -92,7 +92,7 @@ class ExerRepositoryImpl @Inject constructor(
 
     override suspend fun clearDatabase() {
         db.clearAllTables()
-        db.query("DELETE FROM sqlite_sequence", null)
+        dao.deletePrimaryKeyIndex()
     }
 
     override suspend fun deleteSessionById(sessionId: Long) {
