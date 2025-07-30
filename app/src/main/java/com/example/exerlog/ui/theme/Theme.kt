@@ -273,21 +273,6 @@ fun AppTheme(
         darkTheme -> darkScheme // Asegúrate de que darkScheme esté definido en tu archivo
         else -> lightScheme // Asegúrate de que lightScheme esté definido en tu archivo
     }
-    val view = LocalView.current
-    if (!view.isInEditMode) {
-        SideEffect {
-            val window = (view.context as Activity).window
-            // Hacer la barra de estado transparente
-            window.statusBarColor = Color.Transparent.toArgb()
-
-            // Permitir que el contenido se dibuje detrás de las barras del sistema (edge-to-edge)
-            WindowCompat.setDecorFitsSystemWindows(window, false)
-
-            // Configurar el color de los iconos de la barra de estado
-            val insetsController = WindowCompat.getInsetsController(window, view)
-            insetsController.isAppearanceLightStatusBars = !darkTheme
-        }
-    }
 
     MaterialTheme(
         colorScheme = colorScheme,

@@ -1,10 +1,13 @@
 package com.example.exerlog
 
 import android.Manifest
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.Surface
 import androidx.core.app.ActivityCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -28,24 +31,23 @@ class MainActivity : ComponentActivity() {
     lateinit var dao: ExerDAO
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
         installSplashScreen()
         super.onCreate(savedInstanceState)
-
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        val controller = WindowCompat.getInsetsController(window, window.decorView)
-        controller.isAppearanceLightStatusBars = true
-// NO llamar a controller.hide(...)
-
+        // Hace las barras totalmente transparentes y ajusta el tinte de los iconos
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.auto(   // iconos claros u oscuros según tema
+                lightScrim = Color.TRANSPARENT,
+                darkScrim  = Color.TRANSPARENT
+            ),
+            navigationBarStyle = SystemBarStyle.auto(
+                lightScrim = Color.TRANSPARENT,
+                darkScrim  = Color.TRANSPARENT
+            )
+        )
 
         if (BuildConfig.DEBUG) {
             Timber.plant(DebugTree())
         }
-        // Hide the status and navigation bars
-        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
-        windowInsetsController.systemBarsBehavior =
-            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-
 
         setContent {
             AppTheme {

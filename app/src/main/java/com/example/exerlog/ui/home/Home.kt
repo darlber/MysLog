@@ -1,10 +1,13 @@
 package com.example.exerlog.ui.home
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
@@ -32,19 +35,19 @@ fun HomeScreen(
     val sessions by viewModel.sessions.collectAsState()
     val sessionToDelete = viewModel.sessionToDelete
 
-    //TODO: localizacion de textos
     if (sessionToDelete != null) {
-        //TODO AlertDialog en otra clase
         AlertDialog(
             onDismissRequest = { viewModel.sessionToDelete = null },
             title = { Text("Eliminar sesión") },
             text = { Text("¿Estás seguro de que quieres eliminar esta sesión?") },
             confirmButton = {
                 TextButton(onClick = {
-                    viewModel.onEvent(HomeEvent.ConfirmDeleteSession(sessionToDelete.session.sessionId))
-                }) {
-                    Text("Eliminar")
-                }
+                    viewModel.onEvent(
+                        HomeEvent.ConfirmDeleteSession(
+                            sessionToDelete.session.sessionId
+                        )
+                    )
+                }) { Text("Eliminar") }
             },
             dismissButton = {
                 TextButton(onClick = { viewModel.sessionToDelete = null }) {
@@ -54,35 +57,34 @@ fun HomeScreen(
         )
     }
 
-
-    // Manejo de eventos de navegación
     LaunchedEffect(true) {
         viewModel.uiEvent.collect { event ->
-            when (event) {
-                is UiEvent.Navigate -> onNavigate(event)
-                else -> Unit
-            }
+            if (event is UiEvent.Navigate) onNavigate(event)
         }
     }
 
     Scaffold(
+        // Indica que el contenido considera insets de la barra de navegación
+        contentWindowInsets = WindowInsets.navigationBars,
         bottomBar = {
             HomeBottomBar(
+                modifier = Modifier.navigationBarsPadding(),
                 onAddClick = { viewModel.onEvent(HomeEvent.NewSession) },
                 onSettingsClick = { viewModel.onEvent(HomeEvent.OpenSettings) },
-                onOptionsClick = { /* Podés manejar opciones aquí */ }
+                onOptionsClick = { /* Opciones */ }
             )
         }
-    ) { padding ->
+    ) { contentPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                // Aplica el padding incluido de navigationBars
+                .padding(contentPadding)
         ) {
             LazyColumn(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = WindowInsets.systemBars.asPaddingValues()
             ) {
-
                 items(sessions, key = { it.session.sessionId }) { sessionWrapper ->
                     SessionCard(
                         sessionWrapper = sessionWrapper,
@@ -90,7 +92,9 @@ fun HomeScreen(
                             viewModel.onEvent(HomeEvent.SessionClicked(sessionWrapper))
                         },
                         onLongClick = {
-                            viewModel.onEvent(HomeEvent.DeleteSessionRequested(sessionWrapper))
+                            viewModel.onEvent(
+                                HomeEvent.DeleteSessionRequested(sessionWrapper)
+                            )
                         }
                     )
                 }
