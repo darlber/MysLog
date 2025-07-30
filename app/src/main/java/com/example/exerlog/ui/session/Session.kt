@@ -2,13 +2,12 @@ package com.example.exerlog.ui.session
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -23,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.exerlog.db.entities.Session
 import com.example.exerlog.ui.SessionWrapper
-import com.example.exerlog.ui.home.components.HomeBottomBar
 import com.example.exerlog.ui.session.components.HeaderSession
 import com.example.exerlog.utils.UiEvent
 import java.time.LocalDateTime
@@ -48,25 +46,30 @@ fun SessionScreen(
     val coroutineScope = rememberCoroutineScope()
     val timerVisible = remember { mutableStateOf(false) }
 
-    Scaffold(
-        bottomBar = {
+    Surface( // <- añade fondo
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Scaffold(
+            bottomBar = {
 
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            HeaderSession (
-                sessionWrapper = session,
-                muscleGroups = muscleGroups,
-                scrollState = scrollState,
-                height = headerHeight,
-                topPadding = paddingValues.calculateTopPadding(),
-                onEndTime = {  },
-                onStartTime = { }
-            )
+            }
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                HeaderSession(
+                    sessionWrapper = session,
+                    muscleGroups = muscleGroups,
+                    scrollState = scrollState,
+                    height = headerHeight,
+                    topPadding = paddingValues.calculateTopPadding(),
+                    onEndTime = { },
+                    onStartTime = { }
+                )
+            }
         }
     }
 }
@@ -81,10 +84,39 @@ fun rememberMaterialDialogState() {
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewSessionScreen() {
+fun PreviewSessionScreenMock() {
+    val mockSession = SessionWrapper(
+        session = Session(
+            start = LocalDateTime.of(2022, 1, 1, 10, 0),
+            end = LocalDateTime.of(2022, 1, 1, 11, 0)
+        ),
+        muscleGroups = listOf("Chest", "Shoulders", "Triceps")
+    )
+
+    val mockScrollState = rememberLazyListState()
+
     MaterialTheme {
-        SessionScreen(
-            onNavigate = {}
-        )
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Scaffold { paddingValues ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                ) {
+                    HeaderSession(
+                        sessionWrapper = mockSession,
+                        muscleGroups = mockSession.muscleGroups,
+                        scrollState = mockScrollState,
+                        height = 240.dp,
+                        topPadding = 16.dp, // mock padding
+                        onEndTime = {},
+                        onStartTime = {}
+                    )
+                }
+            }
+        }
     }
 }

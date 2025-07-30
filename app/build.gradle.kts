@@ -82,5 +82,7 @@ android {
         //gson
         implementation(libs.gson)
 
+        //splashScreen
+        implementation(libs.androidx.core.splashscreen)
     }
 }

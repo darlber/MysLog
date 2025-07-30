@@ -55,15 +55,15 @@ fun HeaderSession(
     val startTime = DateTimeFormatter.ofPattern("HH:mm").format(session.start)
     val endTime = session.end?.let { DateTimeFormatter.ofPattern("HH:mm").format(it) } ?: "ongoing"
 
-        Box(
-            modifier = Modifier
-                .padding(
-                    start = 12.dp,
-                    top = topPadding,
-                    end = 12.dp
-                )
-                .height(height)
-                .fillMaxWidth()
+    Box(
+        modifier = Modifier
+            .padding(
+                start = 12.dp,
+                top = topPadding,
+                end = 12.dp
+            )
+            .height(height)
+            .fillMaxWidth()
             // TODO: Uncomment for parallax effect
 //                .graphicsLayer {
 //                    val scroll = if(scrollState.layoutInfo.visibleItemsInfo.firstOrNull()?.index == 0) {
@@ -99,7 +99,7 @@ fun HeaderSession(
                     ) {
                         Text(
                             text = startTime,
-                            color = androidx.compose.ui.graphics.Color.Black,
+                            color = MaterialTheme.colorScheme.primary,
                             style = MaterialTheme.typography.headlineSmall,
                             modifier = Modifier
                                 .padding(start = 4.dp)
@@ -109,13 +109,12 @@ fun HeaderSession(
                         )
                         Text(
                             text = "-",
-                            color = androidx.compose.ui.graphics.Color.Black,
                             style = MaterialTheme.typography.headlineSmall,
                             modifier = Modifier.padding(start = 4.dp)
                         )
                         Text(
                             text = endTime,
-                            color = androidx.compose.ui.graphics.Color.Black,
+                            color = MaterialTheme.colorScheme.primary,
                             style = MaterialTheme.typography.headlineSmall,
                             modifier = Modifier
                                 .padding(start = 4.dp)

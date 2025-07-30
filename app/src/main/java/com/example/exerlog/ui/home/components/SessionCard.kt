@@ -43,13 +43,13 @@ fun SessionCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 16.dp, vertical = 4.dp)
             .combinedClickable(
                 onClick = { onClick() },
                 onLongClick = { onLongClick() }
             ),
                 // Estilo de la tarjeta
-        shape = MaterialTheme.shapes.small
+        shape = MaterialTheme.shapes.medium
 
     ) {
         Row(
