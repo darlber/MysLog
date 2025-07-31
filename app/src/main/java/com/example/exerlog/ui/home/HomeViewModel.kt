@@ -9,6 +9,7 @@ import com.example.exerlog.core.Routes
 import com.example.exerlog.db.entities.Session
 import com.example.exerlog.db.repository.ExerRepository
 import com.example.exerlog.ui.SessionWrapper
+import com.example.exerlog.utils.Event
 import com.example.exerlog.utils.UiEvent
 import com.example.exerlog.utils.sortedListOfMuscleGroups
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -51,7 +52,7 @@ class HomeViewModel @Inject constructor(
     val uiEvent = _uiEvent.receiveAsFlow()
     var sessionToDelete by mutableStateOf<SessionWrapper?>(null)
 
-    fun onEvent(event: HomeEvent) {
+    fun onEvent(event: Event) {
         when (event) {
             is HomeEvent.SessionClicked -> {
                 Timber.d("User clicked on session with id: ${event.sessionWrapper.session.sessionId}, name: ${event.sessionWrapper.session.sessionId}")

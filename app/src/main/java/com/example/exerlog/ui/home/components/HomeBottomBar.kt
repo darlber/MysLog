@@ -8,44 +8,53 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.exerlog.ui.home.HomeEvent
+import com.example.exerlog.utils.Event
 
 @Composable
 fun HomeBottomBar(
-    onAddClick: () -> Unit,
-    onSettingsClick: () -> Unit,
-    onOptionsClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onEvent: (Event) -> Unit,
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Row {
-            FloatingActionButton(
-                onClick = onOptionsClick,
-                modifier = Modifier.size(48.dp),
-                containerColor = MaterialTheme.colorScheme.primaryContainer
-            ) {
-                Icon(Icons.Filled.MoreVert, contentDescription = "Options")
+    BottomAppBar(
+        modifier = Modifier,
+        containerColor = Color.Transparent,
+        actions = {
+            Row {
+                FloatingActionButton(
+                    onClick = { onEvent(HomeEvent.OpenSettings) },
+                    modifier = Modifier.size(48.dp),
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                ) {
+                    Icon(Icons.Filled.MoreVert, contentDescription = "Options")
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                FloatingActionButton(
+                    onClick = { onEvent(HomeEvent.OpenSettings) },
+                    modifier = Modifier.size(48.dp),
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                ) {
+                    Icon(Icons.Filled.Settings, contentDescription = "Settings")
+                }
             }
-            Spacer(modifier = Modifier.width(12.dp))
+        },
+        floatingActionButton = {
             FloatingActionButton(
-                onClick = onSettingsClick,
-                modifier = Modifier.size(48.dp),
-                containerColor = MaterialTheme.colorScheme.primaryContainer
+                onClick = { onEvent(HomeEvent.NewSession) },
+                containerColor = MaterialTheme.colorScheme.primary
             ) {
-                Icon(Icons.Filled.Settings, contentDescription = "Settings")
+                Icon(Icons.Filled.Add, contentDescription = "Agregar")
             }
         }
+    )
+}
 
-        FloatingActionButton(
-            onClick = onAddClick,
-            containerColor = MaterialTheme.colorScheme.primary
-        ) {
-            Icon(Icons.Filled.Add, contentDescription = "Agregar")
-        }
-    }
+@Preview
+@Composable
+fun HomeBottomBarPreview() {
+    HomeBottomBar(
+        onEvent = { }
+    )
 }

@@ -68,10 +68,7 @@ fun HomeScreen(
         contentWindowInsets = WindowInsets.navigationBars,
         bottomBar = {
             HomeBottomBar(
-                modifier = Modifier.navigationBarsPadding(),
-                onAddClick = { viewModel.onEvent(HomeEvent.NewSession) },
-                onSettingsClick = { viewModel.onEvent(HomeEvent.OpenSettings) },
-                onOptionsClick = { /* Opciones */ }
+                onEvent = viewModel::onEvent
             )
         }
     ) { contentPadding ->

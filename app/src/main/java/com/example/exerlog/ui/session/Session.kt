@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.exerlog.db.entities.Session
 import com.example.exerlog.ui.SessionWrapper
+import com.example.exerlog.ui.home.components.HomeBottomBar
 import com.example.exerlog.ui.session.components.HeaderSession
 import com.example.exerlog.utils.UiEvent
 import java.time.LocalDateTime
@@ -42,18 +43,15 @@ fun SessionScreen(
 //    val startTimeDialogState = rememberMaterialDialogState()
 //    val endTimeDialogState = rememberMaterialDialogState()
     val scrollState = rememberLazyListState()
-    val headerHeight = 240.dp
+    val headerHeight = 120.dp
     val coroutineScope = rememberCoroutineScope()
     val timerVisible = remember { mutableStateOf(false) }
 
-    Surface( // <- añade fondo
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Scaffold(
-            bottomBar = {
 
-            }
+        Scaffold(
+            bottomBar = {HomeBottomBar {  } }
+
+
         ) { paddingValues ->
             Column(
                 modifier = Modifier
@@ -63,16 +61,15 @@ fun SessionScreen(
                 HeaderSession(
                     sessionWrapper = session,
                     muscleGroups = muscleGroups,
-                    scrollState = scrollState,
-                    height = headerHeight,
                     topPadding = paddingValues.calculateTopPadding(),
                     onEndTime = { },
+                    scrollState = scrollState,
                     onStartTime = { }
                 )
             }
         }
     }
-}
+
 
 private fun Unit.show() {
     TODO("Not yet implemented")
@@ -96,11 +93,7 @@ fun PreviewSessionScreenMock() {
     val mockScrollState = rememberLazyListState()
 
     MaterialTheme {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            Scaffold { paddingValues ->
+           Scaffold { paddingValues ->
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -109,14 +102,13 @@ fun PreviewSessionScreenMock() {
                     HeaderSession(
                         sessionWrapper = mockSession,
                         muscleGroups = mockSession.muscleGroups,
-                        scrollState = mockScrollState,
-                        height = 240.dp,
                         topPadding = 16.dp, // mock padding
                         onEndTime = {},
+                        scrollState = mockScrollState,
                         onStartTime = {}
                     )
                 }
             }
         }
     }
-}
+

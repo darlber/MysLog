@@ -27,6 +27,7 @@ class SessionViewModel @Inject constructor(
     val selectedExercises = MutableStateFlow<List<ExerciseWrapper>>(emptyList())
     val muscleGroups = MutableStateFlow<List<String>>(emptyList())
 
+
     init {
         // Aquí puedes cargar la sesión, ejercicios, etc, usando sessionId y repo
         // Por ejemplo:
