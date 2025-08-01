@@ -7,7 +7,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -48,27 +47,27 @@ fun SessionScreen(
     val timerVisible = remember { mutableStateOf(false) }
 
 
-        Scaffold(
-            bottomBar = {HomeBottomBar {  } }
+    Scaffold(
+        bottomBar = { HomeBottomBar { } },
 
 
         ) { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                HeaderSession(
-                    sessionWrapper = session,
-                    muscleGroups = muscleGroups,
-                    topPadding = paddingValues.calculateTopPadding(),
-                    onEndTime = { },
-                    scrollState = scrollState,
-                    onStartTime = { }
-                )
-            }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            HeaderSession(
+                sessionWrapper = session,
+                muscleGroups = muscleGroups,
+                topPadding = paddingValues.calculateTopPadding(),
+                onEndTime = { },
+                scrollState = scrollState,
+                onStartTime = { }
+            )
         }
     }
+}
 
 
 private fun Unit.show() {
@@ -93,22 +92,27 @@ fun PreviewSessionScreenMock() {
     val mockScrollState = rememberLazyListState()
 
     MaterialTheme {
-           Scaffold { paddingValues ->
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                ) {
-                    HeaderSession(
-                        sessionWrapper = mockSession,
-                        muscleGroups = mockSession.muscleGroups,
-                        topPadding = 16.dp, // mock padding
-                        onEndTime = {},
-                        scrollState = mockScrollState,
-                        onStartTime = {}
-                    )
-                }
+        Scaffold (
+            bottomBar = { HomeBottomBar { } },
+
+
+        ) {
+            paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                HeaderSession(
+                    sessionWrapper = mockSession,
+                    muscleGroups = mockSession.muscleGroups,
+                    topPadding = 16.dp, // mock padding
+                    onEndTime = {},
+                    scrollState = mockScrollState,
+                    onStartTime = {}
+                )
             }
         }
     }
+}
 

@@ -1,0 +1,17 @@
+package com.example.exerlog.ui.exercisepicker
+
+import com.example.exerlog.db.entities.Exercise
+import com.example.exerlog.utils.Event
+
+sealed class ExerciseEvent: Event {
+    data class ExerciseSelected(val exercise: Exercise) : ExerciseEvent()
+    data class OpenGuide(val exercise: Exercise) : ExerciseEvent()
+    object FilterSelected : ExerciseEvent()
+    object FilterUsed : ExerciseEvent()
+    data class SelectMuscle(val muscle: String) : ExerciseEvent()
+    object DeselectMuscles : ExerciseEvent()
+    data class SelectEquipment(val equipment: String) : ExerciseEvent()
+    object DeselectEquipment : ExerciseEvent()
+    object AddExercises : ExerciseEvent()
+    data class SearchChanged(val text: String) : ExerciseEvent()
+}
