@@ -5,9 +5,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -16,15 +16,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.exerlog.db.entities.Session
 import com.example.exerlog.ui.SessionWrapper
+import com.example.exerlog.ui.home.HomeEvent
 import com.example.exerlog.ui.home.components.HomeBottomBar
 import com.example.exerlog.ui.session.components.HeaderSession
 import com.example.exerlog.utils.UiEvent
-import java.time.LocalDateTime
+import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,12 +46,38 @@ fun SessionScreen(
     val coroutineScope = rememberCoroutineScope()
     val timerVisible = remember { mutableStateOf(false) }
 
+    LaunchedEffect(true) {
+        viewModel.uiEvent.collect { event ->
+            Timber.d("UiEvent Received: $event")
+            when (event) {
+                is UiEvent.OpenWebsite -> {
+                    uriHandler.openUri(event.url)
+                }
+
+                is UiEvent.Navigate -> onNavigate(event)
+//                is UiEvent.ToggleTimer -> context.sendTimerAction(TimerService.Actions.TOGGLE)
+//                is UiEvent.ResetTimer -> context.sendTimerAction(TimerService.Actions.RESET)
+//                is UiEvent.IncrementTimer -> context.sendTimerAction(TimerService.Actions.INCREMENT)
+//                is UiEvent.DecrementTimer -> context.sendTimerAction(TimerService.Actions.DECREMENT)
+                else -> Unit
+            }
+        }
+    }
 
     Scaffold(
-        bottomBar = { HomeBottomBar { } },
-
-
-        ) { paddingValues ->
+        bottomBar = {
+            HomeBottomBar { event ->
+                when (event) {
+                    is HomeEvent.NewSession -> {
+                        viewModel.onEvent(SessionEvent.AddExercise)
+                    }
+                    is HomeEvent.OpenSettings -> {
+                        onNavigate(UiEvent.Navigate("settings"))
+                    }
+                }
+            }
+        }
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -78,41 +104,4 @@ fun rememberMaterialDialogState() {
     TODO("Not yet implemented")
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewSessionScreenMock() {
-    val mockSession = SessionWrapper(
-        session = Session(
-            start = LocalDateTime.of(2022, 1, 1, 10, 0),
-            end = LocalDateTime.of(2022, 1, 1, 11, 0)
-        ),
-        muscleGroups = listOf("Chest", "Shoulders", "Triceps")
-    )
-
-    val mockScrollState = rememberLazyListState()
-
-    MaterialTheme {
-        Scaffold (
-            bottomBar = { HomeBottomBar { } },
-
-
-        ) {
-            paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                HeaderSession(
-                    sessionWrapper = mockSession,
-                    muscleGroups = mockSession.muscleGroups,
-                    topPadding = 16.dp, // mock padding
-                    onEndTime = {},
-                    scrollState = mockScrollState,
-                    onStartTime = {}
-                )
-            }
-        }
-    }
-}
 

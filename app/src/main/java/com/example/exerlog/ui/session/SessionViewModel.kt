@@ -69,14 +69,14 @@ class SessionViewModel @Inject constructor(
     init {
         savedStateHandle.get<Long>("session_id")?.let { sessionId ->
             Timber.d("Session ID: $sessionId")
-            viewModelScope.launch(Dispatchers.IO) {
-                repo.getSessionById(sessionId)
-                    .collect { sessionValue ->
-                        _session.value = sessionValue
-                    }
+            viewModelScope.launch {
+                withContext(Dispatchers.IO) {
+                    _session.value = repo.getSessionById(sessionId)
+                }
             }
         }
     }
+
 
     fun onEvent(event: Event) {
         when (event) {
@@ -138,6 +138,7 @@ class SessionViewModel @Inject constructor(
             is SessionEvent.AddExercise -> {
                 _session.value.sessionId.let { id ->
                     sendUiEvent(UiEvent.Navigate("${Routes.EXERCISE_PICKER}/$id"))
+                    Timber.d("Navigating to Exercise Picker with session ID: $id")
                 }
             }
 
@@ -171,11 +172,9 @@ class SessionViewModel @Inject constructor(
                             end = newEndTime
                         ).also { session = it }
                     )
-                    launch(Dispatchers.IO) {
-                        repo.getSessionById(sessionId)
-                            .collect { newSession -> _session.value = newSession }
+                    withContext(Dispatchers.IO) {
+                        _session.value = repo.getSessionById(_session.value.sessionId)
                     }
-
                 }
             }
 
@@ -188,11 +187,9 @@ class SessionViewModel @Inject constructor(
                             start = newStartTime
                         )
                     )
-                    launch(Dispatchers.IO) {
-                        repo.getSessionById(sessionId)
-                            .collect { newSession -> _session.value = newSession }
+                    withContext(Dispatchers.IO) {
+                        _session.value = repo.getSessionById(_session.value.sessionId)
                     }
-
                 }
             }
 

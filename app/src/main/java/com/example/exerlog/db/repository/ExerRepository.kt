@@ -9,7 +9,7 @@ import com.example.exerlog.ui.DatabaseModel
 import kotlinx.coroutines.flow.Flow
 
 interface ExerRepository {
-    fun getSessionById(sessionId: Long): Flow<Session>
+    fun getSessionById(sessionId: Long): Session
     fun getAllSessions(): Flow<List<Session>>
     fun getAllSets(): Flow<List<GymSet>>
     fun getAllExercises(): Flow<List<Exercise>>

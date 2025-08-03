@@ -32,7 +32,7 @@ class PopulateDatabaseCallback @Inject constructor(
         }
     }
 
-    private suspend fun prepopulateDatabase() {
+    suspend fun prepopulateDatabase() {
         try {
             Timber.d("prepopulateDatabase called") // Usando Timber.d para debug logs
             val inputStream =
@@ -61,4 +61,15 @@ class PopulateDatabaseCallback @Inject constructor(
             Timber.e(e, "Generic exception during database prepopulation")
         }
     }
+    override fun onOpen(db: SupportSQLiteDatabase) {
+        super.onOpen(db)
+        CoroutineScope(Dispatchers.IO).launch {
+            val count = exerciseDaoProvider.get().countExercises()
+            if (count == 0) {
+                prepopulateDatabase()
+                Timber.i("Database prepopulated with exercises.")
+            }
+        }
+    }
+
 }

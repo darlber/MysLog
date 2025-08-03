@@ -1,17 +1,24 @@
 package com.example.exerlog.ui.exercisepicker
 
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.exerlog.db.entities.Exercise
+import com.example.exerlog.db.entities.SessionExercise
+import com.example.exerlog.db.repository.ExerRepository
+import com.example.exerlog.utils.Event
+import com.example.exerlog.utils.UiEvent
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@HiltViewModel
 class ExerciseViewModel @Inject constructor(
     private val repo: ExerRepository,
     private val savedStateHandle: SavedStateHandle
@@ -35,7 +42,7 @@ class ExerciseViewModel @Inject constructor(
     private val _searchText = MutableStateFlow("")
     val searchText = _searchText.asStateFlow()
 
-    val filteredExercises: Flow<List<Exercise>> = combine(
+    val filteredExercises = combine(
         repo.getAllExercises(),
         selectedExercises,
         equipmentFilter,
@@ -43,90 +50,27 @@ class ExerciseViewModel @Inject constructor(
         filterSelected,
         filterUsed,
         searchText
-    ) { exercises, selectedExercises, equipmentFilter, muscleFilter, selected, used, text ->
+    ) { exercises, selected, equipment, muscles, selActive, usedActive, query ->
         exercises.filter { exercise ->
+            val muscleGroups =
+                (exercise.primaryMuscles + exercise.secondaryMuscles).map { it.lowercase() }
             val muscleCondition =
-                (muscleFilter.isEmpty() || exercise.getMuscleGroups()
-                    .any { muscleFilter.contains(it) })
+                muscles.isEmpty() || muscles.any { it.lowercase() in muscleGroups }
+
             val equipmentCondition =
-                (equipmentFilter.isEmpty() || exercise.equipment.any { equipmentFilter.contains(it) })
-            val selectedCondition = (!selected || selectedExercises.contains(exercise))
+                equipment.isEmpty() || equipment.contains(exercise.equipment.orEmpty())
 
-            muscleCondition && equipmentCondition && selectedCondition && exercise.getStringMatch(
-                text
-            )
+            val selectedCondition = !selActive || selected.contains(exercise)
+
+            val searchCondition =
+                query.isBlank() || exercise.name.contains(query, ignoreCase = true)
+
+            muscleCondition && equipmentCondition && selectedCondition && searchCondition
         }.sortedBy { exercise ->
-            if (text.isNotBlank()) {
-                exercise.title.length
+            if (query.isNotBlank()) {
+                exercise.name.length
             } else {
-                exercise.title.first().code
-            }
-        }
-    }
-
-    fun onEvent(event: Event) {
-        when (event) {
-            is PickerEvent.OpenGuide -> openGuide(event.exercise)
-            is PickerEvent.ExerciseSelected -> {
-                _selectedExercises.value = buildList {
-                    if (_selectedExercises.value.contains(event.exercise)) {
-                        addAll(_selectedExercises.value.minusElement(event.exercise))
-                    } else {
-                        addAll(_selectedExercises.value)
-                        add(event.exercise)
-                    }
-                }
-            }
-
-            is PickerEvent.FilterSelected -> {
-                _filterSelected.value = !_filterSelected.value
-            }
-
-            is PickerEvent.FilterUsed -> {
-                _filterUsed.value = !_filterUsed.value
-            }
-
-            is PickerEvent.SelectMuscle -> {
-                _muscleFilter.value = if (_muscleFilter.value.contains(event.muscle)) {
-                    _muscleFilter.value.minus(event.muscle)
-                } else {
-                    _muscleFilter.value.plus(event.muscle)
-                }
-            }
-
-            is PickerEvent.DeselectMuscles -> {
-                _muscleFilter.value = emptyList()
-            }
-
-            is PickerEvent.SelectEquipment -> {
-                _equipmentFilter.value = if (_equipmentFilter.value.contains(event.equipment)) {
-                    _equipmentFilter.value.minus(event.equipment)
-                } else {
-                    _equipmentFilter.value.plus(event.equipment)
-                }
-            }
-
-            is PickerEvent.DeselectEquipment -> {
-                _equipmentFilter.value = emptyList()
-            }
-
-            is PickerEvent.AddExercises -> {
-                viewModelScope.launch {
-                    _selectedExercises.value.forEach { exercise ->
-                        savedStateHandle.get<Long>("session_id")?.let { sessionId ->
-                            repo.insertSessionExercise(
-                                SessionExercise(
-                                    parentSessionId = sessionId,
-                                    parentExerciseId = exercise.id
-                                )
-                            )
-                        }
-                    }
-                }
-            }
-
-            is PickerEvent.SearchChanged -> {
-                _searchText.value = event.text
+                exercise.name.firstOrNull()?.code ?: 0
             }
         }
     }
@@ -134,8 +78,53 @@ class ExerciseViewModel @Inject constructor(
     private val _uiEvent = Channel<UiEvent>()
     val uiEvent = _uiEvent.receiveAsFlow()
 
+    fun onEvent(event: Event) {
+        when (event) {
+            is ExerciseEvent.OpenGuide -> openGuide(event.exercise)
+            is ExerciseEvent.ExerciseSelected -> {
+                _selectedExercises.value = _selectedExercises.value.toMutableList().apply {
+                    if (contains(event.exercise)) remove(event.exercise)
+                    else add(event.exercise)
+                }
+            }
+
+            is ExerciseEvent.FilterSelected -> _filterSelected.value = !_filterSelected.value
+            is ExerciseEvent.FilterUsed -> _filterUsed.value = !_filterUsed.value
+            is ExerciseEvent.SelectMuscle -> {
+                _muscleFilter.value = _muscleFilter.value.toMutableList().apply {
+                    if (contains(event.muscle)) remove(event.muscle) else add(event.muscle)
+                }
+            }
+
+            is ExerciseEvent.DeselectMuscles -> _muscleFilter.value = emptyList()
+            is ExerciseEvent.SelectEquipment -> {
+                _equipmentFilter.value = _equipmentFilter.value.toMutableList().apply {
+                    if (contains(event.equipment)) remove(event.equipment) else add(event.equipment)
+                }
+            }
+
+            is ExerciseEvent.DeselectEquipment -> _equipmentFilter.value = emptyList()
+            is ExerciseEvent.AddExercises -> {
+                viewModelScope.launch {
+                    _selectedExercises.value.forEach { exercise ->
+                        savedStateHandle.get<Long>("session_id")?.let { sessionId ->
+                            repo.insertSessionExercise(
+                                SessionExercise(
+                                    parentSessionId = sessionId,
+                                    parentExerciseId = exercise.id.toLong()
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+
+            is ExerciseEvent.SearchChanged -> _searchText.value = event.text
+        }
+    }
+
     private fun openGuide(exercise: Exercise) {
-        sendUiEvent(UiEvent.OpenWebsite(url = "https://duckduckgo.com/?q=! exrx ${exercise.title}"))
+        sendUiEvent(UiEvent.OpenWebsite(url = "https://duckduckgo.com/?q=exrx ${exercise.name}"))
     }
 
     private fun sendUiEvent(event: UiEvent) {
@@ -155,7 +144,7 @@ inline fun <T1, T2, T3, T4, T5, T6, T7, R> combine(
     flow7: Flow<T7>,
     crossinline transform: suspend (T1, T2, T3, T4, T5, T6, T7) -> R
 ): Flow<R> {
-    return kotlinx.coroutines.flow.combine(
+    return combine(
         flow,
         flow2,
         flow3,

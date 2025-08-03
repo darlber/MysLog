@@ -2,6 +2,7 @@ package com.example.exerlog.db.repository
 
 import com.example.exerlog.db.ExerDAO
 import com.example.exerlog.db.GymDatabase
+import com.example.exerlog.db.PopulateDatabaseCallback
 import com.example.exerlog.db.entities.Exercise
 import com.example.exerlog.db.entities.GymSet
 import com.example.exerlog.db.entities.Session
@@ -20,7 +21,8 @@ import javax.inject.Singleton
 @Singleton
 class ExerRepositoryImpl @Inject constructor(
     private val dao: ExerDAO,
-    private val  db: GymDatabase
+    private val  db: GymDatabase,
+    private val populateDatabaseCallback: PopulateDatabaseCallback
 ) : ExerRepository {
 
     override fun getSessionById(sessionId: Long) = dao.getSessionById(sessionId)
@@ -93,6 +95,8 @@ class ExerRepositoryImpl @Inject constructor(
     override suspend fun clearDatabase() {
         db.clearAllTables()
         dao.deletePrimaryKeyIndex()
+        populateDatabaseCallback.prepopulateDatabase()
+
     }
 
     override suspend fun deleteSessionById(sessionId: Long) {

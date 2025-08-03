@@ -19,7 +19,7 @@ interface ExerDAO {
     suspend fun insertAll(exercises: List<Exercise>)
 
     @Query("SELECT * FROM $SESSIONWORKOUT WHERE sessionId = :sessionId")
-    fun getSessionById(sessionId: Long): Flow<Session>
+    fun getSessionById(sessionId: Long): Session
 
     @Query("SELECT * FROM $GYMSET ORDER BY setId ASC")
     fun getAllSets(): Flow<List<GymSet>>
@@ -100,4 +100,7 @@ interface ExerDAO {
 
     @Query("DELETE FROM sqlite_sequence WHERE name = '$SESSIONWORKOUT'")
     suspend fun deletePrimaryKeyIndex()
+
+    @Query("SELECT COUNT(*) FROM $EXERCISE")
+    suspend fun countExercises(): Int
 }
