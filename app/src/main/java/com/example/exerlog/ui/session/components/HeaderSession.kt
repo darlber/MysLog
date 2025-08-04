@@ -159,21 +159,20 @@ fun Session.toSessionTitle(): String {
 }
 
 
-@Preview(showBackground = true)
+@Preview (showBackground = true)
 @Composable
-fun PreviewSessionHeader() {
+fun PreviewHeaderSession() {
     val scrollState = rememberLazyListState()
 
     val session = Session(
-        start = LocalDateTime.of(2022, 1, 1, 10, 0),
-        end = LocalDateTime.of(2022, 1, 1, 11, 0)
+        start = LocalDateTime.of(2023, 8, 4, 10, 30),
+        end = LocalDateTime.of(2023, 8, 4, 12, 0)
     )
-
     val muscleGroups = listOf("Biceps", "Triceps", "Back")
 
     val sessionWrapper = SessionWrapper(
         session = session,
-        muscleGroups
+        muscleGroups = muscleGroups
     )
 
     HeaderSession(

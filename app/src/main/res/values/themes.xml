@@ -12,7 +12,7 @@
 
     <!-- Tema principal -->
     <style name="Theme.ExerLog" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:windowBackground">@color/black</item>
+
     </style>
 
 </resources>
