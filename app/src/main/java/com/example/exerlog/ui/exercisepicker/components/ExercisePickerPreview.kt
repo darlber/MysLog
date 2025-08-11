@@ -20,7 +20,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.exerlog.db.entities.Exercise
 import com.example.exerlog.ui.exercisepicker.ExerciseEvent
-import com.example.exerlog.utils.Event
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,7 +28,9 @@ fun ExercisePickerPreview(
     selectedExercises: List<Exercise>,
     onAddClick: () -> Unit,
     onExerciseClick: (Exercise) -> Unit,
-    onEvent: (ExerciseEvent) -> Unit
+    onEvent: (ExerciseEvent) -> Unit,
+    searchText: String,
+    onSearchChanged: (String) -> Unit
 ) {
     Scaffold(
         floatingActionButton = {
@@ -64,10 +65,11 @@ fun ExercisePickerPreview(
                 Column {
                     Spacer(Modifier.height(40.dp))
                     TextField(
-                        value = "",
-                        onValueChange = {},
+                        value = searchText,
+                        onValueChange = onSearchChanged,
                         label = {
                             Text(
+                                //TODO localizacion
                                 text = "Search",
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.fillMaxWidth()
@@ -181,6 +183,8 @@ fun ExercisePickerContentPreview() {
         selectedExercises = listOf(dummyExercises.first()),
         onAddClick = {},
         onExerciseClick = {},
-        onEvent = {}
+        onEvent = {},
+        searchText = "",
+        onSearchChanged = {}
     )
 }

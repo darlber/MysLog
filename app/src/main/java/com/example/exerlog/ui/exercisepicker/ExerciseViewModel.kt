@@ -111,7 +111,7 @@ class ExerciseViewModel @Inject constructor(
                             repo.insertSessionExercise(
                                 SessionExercise(
                                     parentSessionId = sessionId,
-                                    parentExerciseId = exercise.id.toLong()
+                                    parentExerciseId = exercise.id,
                                 )
                             )
                         }
@@ -123,8 +123,11 @@ class ExerciseViewModel @Inject constructor(
         }
     }
 
+    //    private fun openGuide(exercise: Exercise) {
+//        sendUiEvent(UiEvent.OpenWebsite(url = "https://duckduckgo.com/?q=exrx ${exercise.name}"))
+//    }
     private fun openGuide(exercise: Exercise) {
-        sendUiEvent(UiEvent.OpenWebsite(url = "https://duckduckgo.com/?q=exrx ${exercise.name}"))
+        sendUiEvent(UiEvent.ShowImagePopup(exercise.id))
     }
 
     private fun sendUiEvent(event: UiEvent) {
