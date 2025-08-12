@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.exerlog.core.TipoSet
 import com.example.exerlog.db.entities.GymSet
@@ -140,4 +141,20 @@ fun setTypeColor(tipoSet: Int, colorScheme: ColorScheme): Color {
         TipoSet.DROP -> Color(0x990A2CD0)
         else -> Color.White
     }
+}
+@Preview(showBackground = true)
+@Composable
+fun PreviewExpandedExerciseContent() {
+    val sampleSets = listOf(
+        GymSet(setId = 1, parentSessionExerciseId = 1L, reps = 8, weight = 50f, tipoSet = TipoSet.WARMUP),
+        GymSet(setId = 2, parentSessionExerciseId = 1L, reps = 10, weight = 70f, tipoSet = TipoSet.NORMAL),
+        GymSet(setId = 3, parentSessionExerciseId = 1L, reps = 6, weight = 90f, tipoSet = TipoSet.HARD)
+    )
+
+    ExpandedExerciseContent(
+        sets = sampleSets,
+        onEvent = {},
+        onSetDeleted = {},
+        onSetCreated = {}
+    )
 }
