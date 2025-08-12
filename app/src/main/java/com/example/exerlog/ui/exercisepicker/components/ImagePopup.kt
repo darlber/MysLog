@@ -1,5 +1,6 @@
 package com.example.exerlog.ui.exercisepicker.components
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,11 +32,15 @@ import com.example.exerlog.db.entities.Exercise
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 
+//TODO Related exercises
 @Composable
 fun ImagePopup(
     exercise: Exercise,
     onDismiss: () -> Unit
 ) {
+    BackHandler {
+        onDismiss()
+    }
     Box(
         Modifier
             .fillMaxSize()
@@ -52,7 +57,9 @@ fun ImagePopup(
                 .clickable(enabled = false) {}
         ) {
             Column(
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState()), // 👈 scroll en toda la columna
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Box(Modifier.fillMaxWidth()) {
@@ -73,7 +80,7 @@ fun ImagePopup(
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
 
-                // Imágenes apiladas verticalmente, tamaño fijo, sin scroll aquí
+                // Imágenes apiladas verticalmente
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -95,23 +102,16 @@ fun ImagePopup(
                     }
                 }
 
-                // Área scrollable solo para instrucciones, que ocupa el espacio restante
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)  // ocupa todo el espacio restante
-                        .verticalScroll(rememberScrollState())
+                // Instrucciones (también en el mismo scroll)
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(end = 8.dp)
                 ) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.padding(end = 8.dp) // para evitar que el texto quede pegado al borde
-                    ) {
-                        exercise.instructions.forEachIndexed { index, instruction ->
-                            Text(
-                                text = "${index + 1}. $instruction",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
+                    exercise.instructions.forEachIndexed { index, instruction ->
+                        Text(
+                            text = "${index + 1}. $instruction",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
                 }
             }

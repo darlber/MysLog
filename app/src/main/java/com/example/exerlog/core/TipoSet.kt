@@ -28,7 +28,7 @@ object TipoSet {
 
     /** Devuelve el siguiente tipo como recurso ID */
     @StringRes
-    fun nextRes(@StringRes current: Int): Int {
+    fun next(@StringRes current: Int): Int {
         val currentIndex = order.indexOf(current)
         val nextIndex = (currentIndex + 1) % order.size
         return order[nextIndex]

@@ -19,11 +19,9 @@ data class Exercise(
     val images: List<String>
 
 ) {
-//    fun getMuscleGroups(exercise: Exercise = this): List<String> {
-//        return exercise.primaryMuscles.flatMap {
-//            turnTargetIntoMuscleGroups(it)
-//        }.distinct()
-//    }
+    fun getMuscleGroups(exercise: Exercise = this): List<String> {
+        return exercise.primaryMuscles.distinct()
+    }
 
 //    fun getStringMatch(string: String): Boolean {
 //        return FuzzySearch.regexMatch(string, nae)

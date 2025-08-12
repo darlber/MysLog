@@ -23,6 +23,7 @@ import com.example.exerlog.ui.SessionWrapper
 import com.example.exerlog.ui.home.HomeEvent
 import com.example.exerlog.ui.home.components.HomeBottomBar
 import com.example.exerlog.ui.session.components.HeaderSession
+import com.example.exerlog.ui.session.components.SessionPreview
 import com.example.exerlog.utils.UiEvent
 import timber.log.Timber
 
@@ -64,35 +65,15 @@ fun SessionScreen(
         }
     }
 
-    Scaffold(
-        bottomBar = {
-            HomeBottomBar { event ->
-                when (event) {
-                    is HomeEvent.NewSession -> {
-                        viewModel.onEvent(SessionEvent.AddExercise)
-                    }
-                    is HomeEvent.OpenSettings -> {
-                        onNavigate(UiEvent.Navigate("settings"))
-                    }
-                }
-            }
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            HeaderSession(
-                sessionWrapper = session,
-                muscleGroups = muscleGroups,
-                topPadding = paddingValues.calculateTopPadding(),
-                onEndTime = { },
-                scrollState = scrollState,
-                onStartTime = { }
-            )
-        }
-    }
+    SessionPreview(
+        session = session,
+        exercises = exercises,
+        expandedExercise = expandedExercise,
+        selectedExercises = selectedExercises,
+        muscleGroups = muscleGroups,
+        onEvent = viewModel::onEvent,
+        onNavigate = onNavigate
+    )
 }
 
 

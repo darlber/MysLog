@@ -131,9 +131,9 @@ class SessionViewModel @Inject constructor(
             is SessionEvent.TimerReset -> sendUiEvent(UiEvent.ResetTimer)
             is SessionEvent.TimerIncreased -> sendUiEvent(UiEvent.IncrementTimer)
             is SessionEvent.TimerDecreased -> sendUiEvent(UiEvent.DecrementTimer)
-            is SessionEvent.OpenGuide -> {
-                expandedExercise.value?.exercise?.let { openGuide(it) }
-            }
+//            is SessionEvent.OpenGuide -> {
+//                expandedExercise.value?.exercise?.let { openGuide(it) }
+//            }
 
             is SessionEvent.AddExercise -> {
                 _session.value.sessionId.let { id ->
@@ -197,9 +197,9 @@ class SessionViewModel @Inject constructor(
         }
     }
 
-    private fun openGuide(exercise: Exercise) {
-        sendUiEvent(UiEvent.OpenWebsite(url = "https://duckduckgo.com/?q=! exrx ${exercise.name}"))
-    }
+//    private fun openGuide(exercise: Exercise) {
+//        sendUiEvent(UiEvent.OpenWebsite(url = "https://duckduckgo.com/?q=! exrx ${exercise.name}"))
+//    }
 
     private fun sendUiEvent(event: UiEvent) {
         viewModelScope.launch {
