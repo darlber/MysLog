@@ -12,14 +12,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
+// Imports necesarios para LazyColumn
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items // Necesario si añades más items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -33,10 +36,16 @@ import java.time.format.DateTimeFormatter
 fun SmallPillPreview(text: String, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .background(MaterialTheme.colorScheme.primary, shape = MaterialTheme.shapes.small)
+            .background(
+                MaterialTheme.colorScheme.primary, shape = MaterialTheme.shapes.small
+            )
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
-        Text(text = text, color = MaterialTheme.colorScheme.onPrimary)
+        Text(
+            text = text,
+            color = MaterialTheme.colorScheme.onPrimary,
+            style = MaterialTheme.typography.labelMedium
+        )
     }
 }
 
@@ -57,24 +66,28 @@ fun HeaderSession(
     Box(
         modifier = Modifier
             .padding(
-                start = 12.dp,
-                top = topPadding,
-                end = 12.dp
+                start = 12.dp, top = topPadding, end = 12.dp
             )
             .wrapContentHeight()
-            .fillMaxWidth(),
-        // TODO: Uncomment for parallax effect
-//                .graphicsLayer {
-//                    val scroll = if(scrollState.layoutInfo.visibleItemsInfo.firstOrNull()?.index == 0) {
-//                        scrollState.firstVisibleItemScrollOffset.toFloat()
-//                    } else {
-//                        10000f
-//                    }
-//                    translationY = scroll / 3f // Parallax effect
-//                    alpha = 1 - scroll / 250f // Fade out text
-//                    scaleX = 1 - scroll / 3000f
-//                    scaleY = 1 - scroll / 3000f
-//                }
+            .fillMaxWidth()
+            .graphicsLayer {
+                val scroll =
+                    if (scrollState.layoutInfo.visibleItemsInfo.firstOrNull()?.index == 0) {
+                        scrollState.firstVisibleItemScrollOffset.toFloat()
+                    } else {
+                        // Si no es el primer item o no hay info (como en un preview sin LazyColumn),
+                        // y el offset es 0, no deberíamos usar 10000f.
+                        // Para el preview, si no está en una lista, el offset será 0.
+                        // Si el scrollState no tiene items, su offset será 0.
+                        // Esta lógica es la que causa el problema en el preview.
+                        // No obstante, la solución del LazyColumn en el Preview lo arregla.
+                        10000f 
+                    }
+                translationY = scroll / 3f // Parallax effect
+                alpha = 1 - scroll / 250f // Fade out text
+                scaleX = 1 - scroll / 3000f
+                scaleY = 1 - scroll / 3000f
+            }
 
     ) {
         Column(
@@ -85,14 +98,14 @@ fun HeaderSession(
         ) {
             Column {
                 Text(
-                    text = session.toSessionTitle(),
-                    style = MaterialTheme.typography.headlineSmall
+                    text = session.toSessionTitle(), style = MaterialTheme.typography.headlineMedium
                 )
                 Box(
                     modifier = Modifier
                         .padding(top = 4.dp)
                         .height(1.dp)
-                        .fillMaxWidth(0.5f) // puedes ajustar el ancho (30% del total)
+                        // ajustar el ancho de la linea
+                        .fillMaxWidth(0.66f)
                         .background(MaterialTheme.colorScheme.primary)
                 )
             }
@@ -117,8 +130,7 @@ fun HeaderSession(
                             .padding(start = 4.dp)
                             .clickable {
                                 onStartTime()
-                            }
-                    )
+                            })
                     Text(
                         text = "-",
                         style = MaterialTheme.typography.headlineSmall,
@@ -132,16 +144,14 @@ fun HeaderSession(
                             .padding(start = 4.dp)
                             .clickable {
                                 onEndTime()
-                            }
-                    )
+                            })
                 }
                 FlowRow(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     muscleGroups.forEach { muscle ->
                         SmallPillPreview(
-                            text = muscle,
-                            modifier = Modifier.padding(4.dp)
+                            text = muscle, modifier = Modifier.padding(4.dp)
                         )
                     }
                 }
@@ -159,28 +169,35 @@ fun Session.toSessionTitle(): String {
 }
 
 
-@Preview (showBackground = true)
+@Preview(showBackground = true)
 @Composable
 fun PreviewHeaderSession() {
     val scrollState = rememberLazyListState()
 
     val session = Session(
-        start = LocalDateTime.of(2023, 8, 4, 10, 30),
-        end = LocalDateTime.of(2023, 8, 4, 12, 0)
+        start = LocalDateTime.of(2023, 8, 4, 10, 30), end = LocalDateTime.of(2023, 8, 4, 12, 0)
     )
     val muscleGroups = listOf("Biceps", "Triceps", "Back")
 
     val sessionWrapper = SessionWrapper(
-        session = session,
-        muscleGroups = muscleGroups
+        session = session, muscleGroups = muscleGroups
     )
 
-    HeaderSession(
-        sessionWrapper = sessionWrapper,
-        muscleGroups = muscleGroups,
-        scrollState = scrollState,
-        topPadding = 16.dp,
-        onEndTime = {},
-        onStartTime = {}
-    )
+    // Envuelve HeaderSession en un LazyColumn
+    LazyColumn(state = scrollState) {
+        item {
+            HeaderSession(
+                sessionWrapper = sessionWrapper,
+                muscleGroups = muscleGroups,
+                scrollState = scrollState, // Pasa el mismo scrollState
+                topPadding = 16.dp,
+                onEndTime = {},
+                onStartTime = {}
+            )
+        }
+        // Puedes añadir items de relleno para probar el scroll si quieres
+        // items(20) { index ->
+        //     Text("Item de relleno $index", modifier = Modifier.padding(16.dp).fillMaxWidth())
+        // }
+    }
 }

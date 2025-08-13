@@ -1,9 +1,9 @@
 package com.example.exerlog.ui.session.components
 
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -12,7 +12,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.example.exerlog.db.entities.Exercise
 import com.example.exerlog.db.entities.Session
 import com.example.exerlog.db.entities.SessionExercise
@@ -21,7 +20,6 @@ import com.example.exerlog.ui.SessionWrapper
 import com.example.exerlog.ui.home.HomeEvent
 import com.example.exerlog.ui.home.components.HomeBottomBar
 import com.example.exerlog.ui.session.SessionEvent
-import com.example.exerlog.ui.session.components.HeaderSession
 import com.example.exerlog.utils.Event
 import com.example.exerlog.utils.UiEvent
 
@@ -37,6 +35,7 @@ fun SessionPreview(
     onNavigate: (UiEvent.Navigate) -> Unit
 ) {
     val scrollState = rememberLazyListState()
+
     Scaffold(
         bottomBar = {
             HomeBottomBar { event ->
@@ -47,37 +46,46 @@ fun SessionPreview(
             }
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            state = scrollState,
+            contentPadding = paddingValues
         ) {
-             HeaderSession(
-                sessionWrapper = session,
-                muscleGroups = muscleGroups,
-                topPadding = paddingValues.calculateTopPadding(),
-                onEndTime = { },
-                scrollState = scrollState,
-                onStartTime = { }
-            )
-            LazyColumn(state = scrollState) {
-                itemsIndexed(
-                    items = exercises,
-                    key = { _, exercise -> exercise.sessionExercise.sessionExerciseId }
-                ) { index, exercise ->
-                    val expanded = exercise.sessionExercise.sessionExerciseId == expandedExercise?.sessionExercise?.sessionExerciseId
-                    val selected = selectedExercises.contains(exercise)
-                    SessionExerciseCard(
-                        exerciseWrapper = exercise,
-                        expanded = expanded,
-                        selected = selected,
-                        onEvent = onEvent,
-                        onLongClick = { onEvent(SessionEvent.ExerciseSelected(exercise)) },
-                        onSetDeleted = { /* TODO if needed */ }
-                    ) {
-                        onEvent(SessionEvent.ExerciseExpanded(exercise))
-                    }
+            // Header como primer item de la lista
+            item {
+                HeaderSession(
+                    sessionWrapper = session,
+                    muscleGroups = muscleGroups,
+                    topPadding = paddingValues.calculateTopPadding(),
+                    scrollState = scrollState,
+                    onEndTime = { },
+                    onStartTime = { }
+                )
+            }
+
+            // Lista de ejercicios
+            itemsIndexed(
+                items = exercises,
+                key = { _, exercise -> exercise.sessionExercise.sessionExerciseId }
+            ) { index, exercise ->
+                val expanded = exercise.sessionExercise.sessionExerciseId == expandedExercise?.sessionExercise?.sessionExerciseId
+                val selected = selectedExercises.contains(exercise)
+
+                SessionExerciseCard(
+                    exerciseWrapper = exercise,
+                    expanded = expanded,
+                    selected = selected,
+                    onEvent = onEvent,
+                    onLongClick = { onEvent(SessionEvent.ExerciseSelected(exercise)) },
+                    onSetDeleted = { /* TODO if needed */ }
+                ) {
+                    onEvent(SessionEvent.ExerciseExpanded(exercise))
                 }
+            }
+
+            // Spacer para evitar que el último item quede pegado al bottom bar
+            item {
+                Spacer(modifier = Modifier.height(paddingValues.calculateBottomPadding()))
             }
         }
     }
@@ -100,7 +108,7 @@ fun SessionScreenPreviewContent() {
         images = listOf()
     )
 
-    val dummySessionExercise = com.example.exerlog.db.entities.SessionExercise(
+    val dummySessionExercise = SessionExercise(
         sessionExerciseId = 1L,
         parentSessionId = 1L,
         parentExerciseId = "1"
