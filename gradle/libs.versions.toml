@@ -21,6 +21,7 @@ roomVersion = "2.7.2"
 hiltNavigationCompose = "1.2.0"
 timber = "5.0.1"
 coreSplashScreen = "1.0.1"
+datastoreCore = "1.1.7"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -53,6 +54,7 @@ androidx-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", vers
 material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "coreSplashScreen" }
+androidx-datastore-core = { group = "androidx.datastore", name = "datastore-core", version.ref = "datastoreCore" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

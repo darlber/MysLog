@@ -1,5 +1,6 @@
 package com.example.exerlog.ui.session.components
 
+// Imports necesarios para LazyColumn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,10 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
-// Imports necesarios para LazyColumn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items // Necesario si añades más items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -56,8 +55,8 @@ fun HeaderSession(
     muscleGroups: List<String>,
     scrollState: LazyListState,
     topPadding: Dp,
-    onEndTime: () -> Unit,
-    onStartTime: () -> Unit
+    onEndTime: (LocalDateTime) -> Unit,
+    onStartTime: (LocalDateTime) -> Unit
 ) {
     val session = sessionWrapper.session
     val startTime = DateTimeFormatter.ofPattern("HH:mm").format(session.start)
@@ -81,7 +80,7 @@ fun HeaderSession(
                         // Si el scrollState no tiene items, su offset será 0.
                         // Esta lógica es la que causa el problema en el preview.
                         // No obstante, la solución del LazyColumn en el Preview lo arregla.
-                        10000f 
+                        10000f
                     }
                 translationY = scroll / 3f // Parallax effect
                 alpha = 1 - scroll / 250f // Fade out text
@@ -129,10 +128,11 @@ fun HeaderSession(
                         modifier = Modifier
                             .padding(start = 4.dp)
                             .clickable {
-                                onStartTime()
-                            })
-                    Text(
-                        text = "-",
+                                onStartTime(session.start)
+                        }
+                    )
+                                Text (
+                                text = "-",
                         style = MaterialTheme.typography.headlineSmall,
                         modifier = Modifier.padding(start = 4.dp)
                     )
@@ -143,8 +143,9 @@ fun HeaderSession(
                         modifier = Modifier
                             .padding(start = 4.dp)
                             .clickable {
-                                onEndTime()
-                            })
+                            session.end?.let { onEndTime(it) }
+                        }
+                    )
                 }
                 FlowRow(
                     horizontalArrangement = Arrangement.Center

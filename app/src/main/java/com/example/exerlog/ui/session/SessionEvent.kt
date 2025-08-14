@@ -26,4 +26,6 @@ sealed class SessionEvent : Event {
 
     data class StartTimeChanged(val newTime: LocalTime) : SessionEvent()
     data class EndTimeChanged(val newTime: LocalTime) : SessionEvent()
+    object FinishSession : SessionEvent()
+
 }

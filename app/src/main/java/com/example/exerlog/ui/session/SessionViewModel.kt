@@ -192,11 +192,22 @@ class SessionViewModel @Inject constructor(
                     }
                 }
             }
+            is SessionEvent.FinishSession -> {
+                finishSession() 
+            }
 
             else -> Unit
         }
     }
 
+    fun finishSession() {
+        val now = LocalDateTime.now()
+        _session.value = _session.value.copy(end = now)
+        viewModelScope.launch {
+            repo.updateSession(_session.value)
+            Timber.d("Session finished at: $now")
+        }
+    }
 //    private fun openGuide(exercise: Exercise) {
 //        sendUiEvent(UiEvent.OpenWebsite(url = "https://duckduckgo.com/?q=! exrx ${exercise.name}"))
 //    }

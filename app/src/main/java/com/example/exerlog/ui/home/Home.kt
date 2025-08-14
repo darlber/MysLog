@@ -1,13 +1,13 @@
 package com.example.exerlog.ui.home
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
@@ -62,40 +62,28 @@ fun HomeScreen(
             if (event is UiEvent.Navigate) onNavigate(event)
         }
     }
+    val topPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
     Scaffold(
-        // Indica que el contenido considera insets de la barra de navegación
-        contentWindowInsets = WindowInsets.navigationBars,
-        bottomBar = {
-            HomeBottomBar(
-                onEvent = viewModel::onEvent
-            )
-        }
-    ) { contentPadding ->
-        Box(
+        bottomBar = { HomeBottomBar(onEvent = viewModel::onEvent) }
+    ) { _ -> // aquí ignoramos paddingValues
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                // Aplica el padding incluido de navigationBars
-                .padding(contentPadding)
+                .padding(top = topPadding), // solo padding superior
+            contentPadding = PaddingValues(bottom = 0.dp) // ignorar padding inferior
         ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = WindowInsets.systemBars.asPaddingValues()
-            ) {
-                items(sessions, key = { it.session.sessionId }) { sessionWrapper ->
-                    SessionCard(
-                        sessionWrapper = sessionWrapper,
-                        onClick = {
-                            viewModel.onEvent(HomeEvent.SessionClicked(sessionWrapper))
-                        },
-                        onLongClick = {
-                            viewModel.onEvent(
-                                HomeEvent.DeleteSessionRequested(sessionWrapper)
-                            )
-                        }
-                    )
-                }
+            items(sessions, key = { it.session.sessionId }) { sessionWrapper ->
+                SessionCard(
+                    sessionWrapper = sessionWrapper,
+                    onClick = { viewModel.onEvent(HomeEvent.SessionClicked(sessionWrapper)) },
+                    onLongClick = { viewModel.onEvent(HomeEvent.DeleteSessionRequested(sessionWrapper)) }
+                )
             }
+        // Spacer para que el último elemento quede scrollable sobre el BottomAppBar
+        item {
+            Spacer(modifier = Modifier.height(80.dp)) // Ajusta altura según tu BottomBar
+        }
         }
     }
 }

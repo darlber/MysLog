@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -18,10 +19,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.exerlog.db.entities.GymSet
 import com.example.exerlog.db.entities.Session
 import com.example.exerlog.ui.SessionWrapper
+import com.example.exerlog.ui.TimerState
 import com.example.exerlog.ui.home.HomeEvent
 import com.example.exerlog.ui.home.components.HomeBottomBar
+import com.example.exerlog.ui.session.components.DeletionAlertDialog
 import com.example.exerlog.ui.session.components.HeaderSession
 import com.example.exerlog.ui.session.components.SessionPreview
 import com.example.exerlog.utils.UiEvent
@@ -35,17 +39,27 @@ fun SessionScreen(
 ) {
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
+    val scrollState = rememberLazyListState()
+    val headerHeight = 120.dp
+    val coroutineScope = rememberCoroutineScope()
+
+    // Estado de dominio desde el ViewModel
     val session by viewModel.session.collectAsState(SessionWrapper(Session(), emptyList()))
     val exercises by viewModel.exercises.collectAsState(initial = emptyList())
     val expandedExercise by viewModel.expandedExercise.collectAsState()
     val selectedExercises by viewModel.selectedExercises.collectAsState()
     val muscleGroups by viewModel.muscleGroups.collectAsState(emptyList())
+
+    // ---- Estado de UI efímero (propio de la pantalla) ----
+    val deleteExerciseDialog = remember { mutableStateOf(false) }
+    val deleteSessionDialog = remember { mutableStateOf(false) }
+    val deleteSetDialog = remember { mutableStateOf<GymSet?>(null) }
+    val timerVisible = remember { mutableStateOf(false) }
+    val timerState = remember { TimerState(running = false, time = 0L, maxTime = 0L) }
+
 //    val startTimeDialogState = rememberMaterialDialogState()
 //    val endTimeDialogState = rememberMaterialDialogState()
-    val scrollState = rememberLazyListState()
-    val headerHeight = 120.dp
-    val coroutineScope = rememberCoroutineScope()
-    val timerVisible = remember { mutableStateOf(false) }
+
 
     LaunchedEffect(true) {
         viewModel.uiEvent.collect { event ->
@@ -54,7 +68,6 @@ fun SessionScreen(
                 is UiEvent.OpenWebsite -> {
                     uriHandler.openUri(event.url)
                 }
-
                 is UiEvent.Navigate -> onNavigate(event)
 //                is UiEvent.ToggleTimer -> context.sendTimerAction(TimerService.Actions.TOGGLE)
 //                is UiEvent.ResetTimer -> context.sendTimerAction(TimerService.Actions.RESET)
@@ -72,9 +85,51 @@ fun SessionScreen(
         selectedExercises = selectedExercises,
         muscleGroups = muscleGroups,
         onEvent = viewModel::onEvent,
-        onNavigate = onNavigate
+        onNavigate = onNavigate,
+        deleteExerciseDialog = deleteExerciseDialog,
+        deleteSessionDialog = deleteSessionDialog,
+        deleteSetDialog = deleteSetDialog,
+        timerVisible = timerVisible,
+        timerState = timerState
     )
+    // ---- Diálogos ----
+    if (deleteExerciseDialog.value) {
+        DeletionAlertDialog(
+            onDismiss = { deleteExerciseDialog.value = false },
+            onDelete = {
+                viewModel.onEvent(SessionEvent.RemoveSelectedExercises)
+                deleteExerciseDialog.value = false
+            },
+            title = { Text("Remove ${selectedExercises.size} Exercise${if (selectedExercises.size > 1) "s" else ""}?") },
+            text = { Text("Are you sure you want to remove the selected exercises from this session? This action can not be undone.") }
+        )
+    }
+
+    if (deleteSessionDialog.value) {
+        DeletionAlertDialog(
+            onDismiss = { deleteSessionDialog.value = false },
+            onDelete = {
+                viewModel.onEvent(SessionEvent.RemoveSession)
+                deleteSessionDialog.value = false
+            },
+            title = { Text("Delete Session?") },
+            text = { Text("Are you sure you want to delete this session and all of its contents? This action can not be undone.") }
+        )
+    }
+
+    if (deleteSetDialog.value != null) {
+        DeletionAlertDialog(
+            onDismiss = { deleteSetDialog.value = null },
+            onDelete = {
+                deleteSetDialog.value?.let { viewModel.onEvent(SessionEvent.SetDeleted(it)) }
+                deleteSetDialog.value = null
+            },
+            title = { Text("Delete Set?") },
+            text = { Text("Are you sure you want to delete this set? This action can not be undone.") }
+        )
+    }
 }
+
 
 
 private fun Unit.show() {

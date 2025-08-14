@@ -10,15 +10,18 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.exerlog.db.entities.Exercise
+import com.example.exerlog.db.entities.GymSet
 import com.example.exerlog.db.entities.Session
 import com.example.exerlog.db.entities.SessionExercise
 import com.example.exerlog.ui.ExerciseWrapper
 import com.example.exerlog.ui.SessionWrapper
-import com.example.exerlog.ui.home.HomeEvent
-import com.example.exerlog.ui.home.components.HomeBottomBar
+import com.example.exerlog.ui.TimerState
 import com.example.exerlog.ui.session.SessionEvent
 import com.example.exerlog.utils.Event
 import com.example.exerlog.utils.UiEvent
@@ -32,18 +35,25 @@ fun SessionPreview(
     selectedExercises: List<ExerciseWrapper>,
     muscleGroups: List<String>,
     onEvent: (Event) -> Unit,
-    onNavigate: (UiEvent.Navigate) -> Unit
+    onNavigate: (UiEvent.Navigate) -> Unit,
+    deleteExerciseDialog: MutableState<Boolean>,
+    deleteSessionDialog: MutableState<Boolean>,
+    deleteSetDialog: MutableState<GymSet?>,
+    timerVisible: MutableState<Boolean>,
+    timerState: TimerState
 ) {
     val scrollState = rememberLazyListState()
 
     Scaffold(
         bottomBar = {
-            HomeBottomBar { event ->
-                when (event) {
-                    is HomeEvent.NewSession -> onEvent(SessionEvent.AddExercise)
-                    is HomeEvent.OpenSettings -> onNavigate(UiEvent.Navigate("settings"))
-                }
-            }
+            SessionBottomBar(
+                onDeleteSession = { deleteSessionDialog.value = true },
+                onFinishSession = { onEvent(SessionEvent.FinishSession) },
+                timerVisible = timerVisible.value,
+                timerState = timerState,
+                onTimerPress = { timerVisible.value = !timerVisible.value },
+                onFAB = { onEvent(SessionEvent.AddExercise) }
+            )
         }
     ) { paddingValues ->
         LazyColumn(
@@ -58,8 +68,12 @@ fun SessionPreview(
                     muscleGroups = muscleGroups,
                     topPadding = paddingValues.calculateTopPadding(),
                     scrollState = scrollState,
-                    onEndTime = { },
-                    onStartTime = { }
+                    onStartTime = { newTime ->
+                        onEvent(SessionEvent.StartTimeChanged(newTime.toLocalTime()))
+                    },
+                    onEndTime = { newTime ->
+                        onEvent(SessionEvent.EndTimeChanged(newTime.toLocalTime()))
+                    }
                 )
             }
 
@@ -68,7 +82,8 @@ fun SessionPreview(
                 items = exercises,
                 key = { _, exercise -> exercise.sessionExercise.sessionExerciseId }
             ) { index, exercise ->
-                val expanded = exercise.sessionExercise.sessionExerciseId == expandedExercise?.sessionExercise?.sessionExerciseId
+                val expanded =
+                    exercise.sessionExercise.sessionExerciseId == expandedExercise?.sessionExercise?.sessionExerciseId
                 val selected = selectedExercises.contains(exercise)
 
                 SessionExerciseCard(
@@ -103,7 +118,10 @@ fun SessionScreenPreviewContent() {
         equipment = "Bodyweight",
         primaryMuscles = listOf("Chest", "Triceps"),
         secondaryMuscles = listOf("Shoulders"),
-        instructions = listOf("Keep your body straight", "Lower yourself until your chest nearly touches the floor"),
+        instructions = listOf(
+            "Keep your body straight",
+            "Lower yourself until your chest nearly touches the floor"
+        ),
         category = "Strength",
         images = listOf()
     )
@@ -126,7 +144,12 @@ fun SessionScreenPreviewContent() {
     )
 
     val dummyMuscleGroups = listOf("Chest", "Triceps", "Shoulders")
-
+    // Estados locales de prueba
+    val deleteExerciseDialog = remember { mutableStateOf(false) }
+    val deleteSessionDialog = remember { mutableStateOf(false) }
+    val deleteSetDialog = remember { mutableStateOf<GymSet?>(null) }
+    val timerVisible = remember { mutableStateOf(true) }
+    val timerState = remember { TimerState(running = false, time = 0L, maxTime = 0L) }
     SessionPreview(
         session = dummySession,
         exercises = listOf(dummyExerciseWrapper),
@@ -134,6 +157,11 @@ fun SessionScreenPreviewContent() {
         selectedExercises = emptyList(),
         muscleGroups = dummyMuscleGroups,
         onEvent = {},
-        onNavigate = {}
+        onNavigate = {},
+        deleteExerciseDialog = deleteExerciseDialog,
+        deleteSessionDialog = deleteSessionDialog,
+        deleteSetDialog = deleteSetDialog,
+        timerVisible = timerVisible,
+        timerState = timerState
     )
 }
