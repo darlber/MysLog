@@ -32,4 +32,5 @@ interface ExerRepository {
     fun getDatabaseModel(): DatabaseModel
     suspend fun clearDatabase()
     suspend fun deleteSessionById(sessionId: Long)
+    fun getAllEquipment(): Flow<List<String>>
 }

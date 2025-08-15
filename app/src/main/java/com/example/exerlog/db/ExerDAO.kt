@@ -48,6 +48,9 @@ interface ExerDAO {
     @Insert(onConflict = OnConflictStrategy.Companion.IGNORE)
     suspend fun insertSession(session: Session): Long
 
+    @Query("SELECT DISTINCT equipment FROM $EXERCISE ORDER BY equipment ASC")
+    fun getAllEquipment(): Flow<List<String>>
+
     @Delete
     suspend fun removeSession(session: Session)
 

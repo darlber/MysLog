@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessibilityNew
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -30,8 +31,13 @@ fun ExercisePickerPreview(
     onExerciseClick: (Exercise) -> Unit,
     onEvent: (ExerciseEvent) -> Unit,
     searchText: String,
-    onSearchChanged: (String) -> Unit
-) {
+    onSearchChanged: (String) -> Unit,
+    onFilterSelectedClick: () -> Unit,
+    onFilterUsedClick: () -> Unit,
+    onMuscleFilterClick: () -> Unit,
+    onEquipmentFilterClick: () -> Unit,
+
+    ) {
     Scaffold(
         floatingActionButton = {
             Box(modifier = Modifier.height(64.dp).width(80.dp)) {
@@ -91,13 +97,13 @@ fun ExercisePickerPreview(
                             .padding(end = 8.dp),
                         horizontalArrangement = Arrangement.End
                     ) {
-                        FilterChip(selected = false, onClick = {}, label = { Text("Selected") })
+                        FilterChip(selected = false, onClick = {onFilterSelectedClick}, label = { Text("Selected") })
                         Spacer(Modifier.width(8.dp))
-                        FilterChip(selected = false, onClick = {}, label = { Text("Used") })
+                        FilterChip(selected = false, onClick = {onFilterUsedClick}, label = { Text("Used") })
                         Spacer(Modifier.width(8.dp))
                         FilterChip(
                             selected = false,
-                            onClick = {},
+                            onClick = {onEquipmentFilterClick},
                             label = {
                                 Icon(
                                     Icons.Default.AccessibilityNew,
@@ -116,10 +122,10 @@ fun ExercisePickerPreview(
                         Spacer(Modifier.width(8.dp))
                         FilterChip(
                             selected = false,
-                            onClick = {},
+                            onClick = {onMuscleFilterClick},
                             label = {
                                 Icon(
-                                    Icons.Default.ShoppingCart,
+                                    Icons.Default.FitnessCenter,
                                     contentDescription = null,
                                     modifier = Modifier.size(18.dp)
                                 )
@@ -185,6 +191,10 @@ fun ExercisePickerContentPreview() {
         onExerciseClick = {},
         onEvent = {},
         searchText = "",
-        onSearchChanged = {}
+        onSearchChanged = {},
+        onFilterSelectedClick = {},
+        onFilterUsedClick = {},
+        onMuscleFilterClick = {},
+        onEquipmentFilterClick = {}
     )
 }

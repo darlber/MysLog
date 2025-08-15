@@ -42,6 +42,9 @@ class ExerciseViewModel @Inject constructor(
     private val _searchText = MutableStateFlow("")
     val searchText = _searchText.asStateFlow()
 
+    // Lista de todos los equipos disponibles
+    private val _allEquipment = MutableStateFlow<List<String>>(emptyList())
+
     val filteredExercises = combine(
         repo.getAllExercises(),
         selectedExercises,
@@ -77,6 +80,15 @@ class ExerciseViewModel @Inject constructor(
 
     private val _uiEvent = Channel<UiEvent>()
     val uiEvent = _uiEvent.receiveAsFlow()
+
+    init {
+        // Cargar lista de equipos desde la DB
+        viewModelScope.launch {
+            repo.getAllEquipment().collect { equipmentList ->
+                _allEquipment.value = equipmentList
+            }
+        }
+    }
 
     fun onEvent(event: Event) {
         when (event) {
@@ -123,9 +135,6 @@ class ExerciseViewModel @Inject constructor(
         }
     }
 
-    //    private fun openGuide(exercise: Exercise) {
-//        sendUiEvent(UiEvent.OpenWebsite(url = "https://duckduckgo.com/?q=exrx ${exercise.name}"))
-//    }
     private fun openGuide(exercise: Exercise) {
         sendUiEvent(UiEvent.ShowImagePopup(exercise.id))
     }

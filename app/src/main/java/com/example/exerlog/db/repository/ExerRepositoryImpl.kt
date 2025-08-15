@@ -103,6 +103,9 @@ class ExerRepositoryImpl @Inject constructor(
         dao.deleteSessionById(sessionId)
     }
 
+    override fun getAllEquipment(): Flow<List<String>> {
+        return dao.getAllEquipment()
+    }
 
 
 }
