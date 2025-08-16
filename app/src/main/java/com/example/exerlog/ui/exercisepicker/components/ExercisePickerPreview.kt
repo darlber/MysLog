@@ -2,6 +2,7 @@ package com.example.exerlog.ui.exercisepicker.components
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CutCornerShape
@@ -95,7 +96,7 @@ fun ExercisePickerPreview(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(end = 8.dp),
-                        horizontalArrangement = Arrangement.End
+                        horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
                         FilterChip(selected = false, onClick = {onFilterSelectedClick}, label = { Text("Selected") })
                         Spacer(Modifier.width(8.dp))
@@ -103,7 +104,7 @@ fun ExercisePickerPreview(
                         Spacer(Modifier.width(8.dp))
                         FilterChip(
                             selected = false,
-                            onClick = {onEquipmentFilterClick},
+                            onClick = {onMuscleFilterClick()},
                             label = {
                                 Icon(
                                     Icons.Default.AccessibilityNew,
@@ -122,7 +123,7 @@ fun ExercisePickerPreview(
                         Spacer(Modifier.width(8.dp))
                         FilterChip(
                             selected = false,
-                            onClick = {onMuscleFilterClick},
+                            onClick = {onEquipmentFilterClick()},
                             label = {
                                 Icon(
                                     Icons.Default.FitnessCenter,

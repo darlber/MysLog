@@ -106,6 +106,9 @@ class ExerRepositoryImpl @Inject constructor(
     override fun getAllEquipment(): Flow<List<String>> {
         return dao.getAllEquipment()
     }
+    override fun getAllMuscles(): Flow<List<String>> {
+        return dao.getAllMuscles()
+    }
 
 
 }

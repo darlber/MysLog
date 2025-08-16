@@ -1,28 +1,25 @@
 package com.example.exerlog.ui.exercisepicker
 
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.exerlog.ui.exercisepicker.components.EquipmentSheet
 import com.example.exerlog.ui.exercisepicker.components.ExercisePickerPreview
 import com.example.exerlog.ui.exercisepicker.components.ImagePopup
-import com.example.exerlog.ui.exercisepicker.components.EquipmentSheet
-import com.example.exerlog.ui.modalbottomsheet.ModalBottomSheetLayout
-import com.example.exerlog.ui.modalbottomsheet.ModalBottomSheetValue
-import com.example.exerlog.ui.modalbottomsheet.rememberModalBottomSheetState
+import com.example.exerlog.ui.exercisepicker.components.MuscleSheet
 import com.example.exerlog.utils.UiEvent
 import kotlinx.coroutines.launch
-import androidx.compose.runtime.rememberCoroutineScope
-import timber.log.Timber
-import androidx.compose.ui.Modifier
-import androidx.compose.material3.MaterialTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,89 +27,92 @@ fun ExercisePicker(
     navController: NavController,
     viewModel: ExerciseViewModel = hiltViewModel()
 ) {
-    Timber.d("ExercisePickerScreen: Composable launched")
     val exercises by viewModel.filteredExercises.collectAsState(initial = emptyList())
     val selectedExercises by viewModel.selectedExercises.collectAsState()
     val searchText by viewModel.searchText.collectAsState()
-    val muscleFilter by viewModel.muscleFilter.collectAsState()
     val equipmentFilter by viewModel.equipmentFilter.collectAsState()
+    val muscleFilter by viewModel.muscleFilter.collectAsState()
+    val allEquipment by viewModel._allEquipment.collectAsState() // <- lista completa desde DB
+
+    val allMusclesList by viewModel._allMuscles.collectAsState() // <- lista completa desde DB
+
 
     val keyboardController = LocalSoftwareKeyboardController.current
     val coroutineScope = rememberCoroutineScope()
-    val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var equipmentBottomsheet by remember { mutableStateOf(false) }
-
     var showPopupExerciseId by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(true) {
         viewModel.uiEvent.collect { event ->
-            Timber.d("ExercisePickerScreen: Event received: $event")
             when (event) {
                 is UiEvent.ShowImagePopup -> {
                     showPopupExerciseId = event.exerciseId
                     keyboardController?.hide()
                 }
+
                 else -> Unit
             }
         }
     }
-    ModalBottomSheetLayout(
-        sheetContent = {
-            if (equipmentBottomsheet) {
-//                EquipmentSheet(
-//                    selectedEquipment = equipmentFilter,  // tu filtro actual
-//                    allEquipment = viewModel.allEquipment, // lista completa que debes definir en el ViewModel
-//                    onEvent = viewModel::onEvent
-//                )
-//            } else {
-//                MuscleSheet(
-//                    selectedMuscles = viewModel.selectedMusclesList,     // Lista de músculos seleccionados
-//                    onEvent = viewModel::onEvent                           // Función de eventos
-//                )
+
+    // Contenido principal
+    ExercisePickerPreview(
+        exercises = exercises,
+        selectedExercises = selectedExercises,
+        onAddClick = {
+            viewModel.onEvent(ExerciseEvent.AddExercises)
+            navController.popBackStack()
+        },
+        onExerciseClick = { exercise ->
+            viewModel.onEvent(ExerciseEvent.ExerciseSelected(exercise))
+        },
+        onSearchChanged = { text -> viewModel.onEvent(ExerciseEvent.SearchChanged(text)) },
+        searchText = searchText,
+        onEvent = viewModel::onEvent,
+        onFilterSelectedClick = { viewModel.onEvent(ExerciseEvent.FilterSelected) },
+        onFilterUsedClick = { viewModel.onEvent(ExerciseEvent.FilterUsed) },
+        onMuscleFilterClick = {
+            equipmentBottomsheet = false
+            coroutineScope.launch {
+                keyboardController?.hide()
+                sheetState.show()
             }
         },
-        sheetState = sheetState,
-        sheetShape = MaterialTheme.shapes.large
+        onEquipmentFilterClick = {
+            equipmentBottomsheet = true
+            coroutineScope.launch {
+                keyboardController?.hide()
+                sheetState.show()
+            }
+        }
     )
 
-    {
-        ExercisePickerPreview(
-            exercises = exercises,
-            selectedExercises = selectedExercises,
-            onAddClick = {
-                viewModel.onEvent(ExerciseEvent.AddExercises)
-                navController.popBackStack()
+    // BottomSheet oficial de Material3
+    if (sheetState.isVisible) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                coroutineScope.launch { sheetState.hide() }
             },
-            onExerciseClick = { exercise ->
-                viewModel.onEvent(ExerciseEvent.ExerciseSelected(exercise))
-            },
-            onSearchChanged = { text -> viewModel.onEvent(ExerciseEvent.SearchChanged(text)) },
-            searchText = searchText,
-            onEvent = viewModel::onEvent,
-            onFilterSelectedClick = { viewModel.onEvent(ExerciseEvent.FilterSelected) },
-            onFilterUsedClick = { viewModel.onEvent(ExerciseEvent.FilterUsed) },
-            onMuscleFilterClick = {
-                equipmentBottomsheet = false
-                coroutineScope.launch {
-                    if (sheetState.isVisible) sheetState.hide() else {
-                        keyboardController?.hide()
-                        sheetState.show()
-                    }
-                }
-            },
-            onEquipmentFilterClick = {
-                equipmentBottomsheet = true
-                coroutineScope.launch {
-                    if (sheetState.isVisible) sheetState.hide() else {
-                        keyboardController?.hide()
-                        sheetState.show()
-                    }
-                }
+            sheetState = sheetState
+        ) {
+            if (equipmentBottomsheet) {
+                EquipmentSheet(
+                    selectedEquipment = equipmentFilter,
+                    allEquipment = allEquipment, // <- usamos los datos de la DB
+                    onEvent = viewModel::onEvent
+                )
+            } else {
+                MuscleSheet(
+                    selectedMusclegroups = muscleFilter,
+                    allMuscleGroups = allMusclesList ,
+                    onEvent = viewModel::onEvent,
+                )
             }
-        )
+        }
     }
 
-    // Mostrar popup si hay ejercicio seleccionado para popup
+    // Popup de imagen del ejercicio
     if (showPopupExerciseId != null) {
         val exercise = exercises.find { it.id == showPopupExerciseId }
         if (exercise != null) {

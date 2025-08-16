@@ -43,7 +43,9 @@ class ExerciseViewModel @Inject constructor(
     val searchText = _searchText.asStateFlow()
 
     // Lista de todos los equipos disponibles
-    private val _allEquipment = MutableStateFlow<List<String>>(emptyList())
+    val _allEquipment = MutableStateFlow<List<String>>(emptyList())
+    // Lista de todos los músculos disponibles
+    val _allMuscles = MutableStateFlow<List<String>>(emptyList())
 
     val filteredExercises = combine(
         repo.getAllExercises(),
@@ -56,6 +58,7 @@ class ExerciseViewModel @Inject constructor(
     ) { exercises, selected, equipment, muscles, selActive, usedActive, query ->
         exercises.filter { exercise ->
             val muscleGroups =
+                //TODO REVISAR SI QUIERO ESTO O NO CON LOS MÚSCULOS SECUNDARIOS
                 (exercise.primaryMuscles + exercise.secondaryMuscles).map { it.lowercase() }
             val muscleCondition =
                 muscles.isEmpty() || muscles.any { it.lowercase() in muscleGroups }
@@ -83,6 +86,11 @@ class ExerciseViewModel @Inject constructor(
 
     init {
         // Cargar lista de equipos desde la DB
+        viewModelScope.launch {
+            repo.getAllMuscles().collect { musclesList ->
+                _allMuscles.value = musclesList
+            }
+        }
         viewModelScope.launch {
             repo.getAllEquipment().collect { equipmentList ->
                 _allEquipment.value = equipmentList

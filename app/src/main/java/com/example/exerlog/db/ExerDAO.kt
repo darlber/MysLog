@@ -6,8 +6,10 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.example.exerlog.core.Entities.EQUIPMENT
 import com.example.exerlog.core.Entities.EXERCISE
 import com.example.exerlog.core.Entities.GYMSET
+import com.example.exerlog.core.Entities.PRIMARYMUSCLE
 import com.example.exerlog.core.Entities.SESSIONEXERCISE
 import com.example.exerlog.core.Entities.SESSIONWORKOUT
 import com.example.exerlog.db.entities.*
@@ -48,8 +50,11 @@ interface ExerDAO {
     @Insert(onConflict = OnConflictStrategy.Companion.IGNORE)
     suspend fun insertSession(session: Session): Long
 
-    @Query("SELECT DISTINCT equipment FROM $EXERCISE ORDER BY equipment ASC")
+    @Query("SELECT DISTINCT $EQUIPMENT FROM $EXERCISE WHERE $EQUIPMENT IS NOT NULL ORDER BY $EQUIPMENT ASC")
     fun getAllEquipment(): Flow<List<String>>
+
+    @Query("SELECT DISTINCT $PRIMARYMUSCLE FROM $EXERCISE WHERE $PRIMARYMUSCLE IS NOT NULL ORDER BY $PRIMARYMUSCLE ASC")
+    fun getAllMuscles(): Flow<List<String>>
 
     @Delete
     suspend fun removeSession(session: Session)
