@@ -71,7 +71,7 @@ fun ExercisePicker(
         searchText = searchText,
         onEvent = viewModel::onEvent,
         onFilterSelectedClick = { viewModel.onEvent(ExerciseEvent.FilterSelected) },
-        onFilterUsedClick = { viewModel.onEvent(ExerciseEvent.FilterUsed) },
+        onFilterUsedClick = { viewModel.onEvent(ExerciseEvent.FilterUsed)},
         onMuscleFilterClick = {
             equipmentBottomsheet = false
             coroutineScope.launch {

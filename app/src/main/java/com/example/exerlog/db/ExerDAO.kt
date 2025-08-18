@@ -9,6 +9,7 @@ import androidx.room.Update
 import com.example.exerlog.core.Entities.EQUIPMENT
 import com.example.exerlog.core.Entities.EXERCISE
 import com.example.exerlog.core.Entities.GYMSET
+import com.example.exerlog.core.Entities.PARENTEXERCISEID
 import com.example.exerlog.core.Entities.PRIMARYMUSCLE
 import com.example.exerlog.core.Entities.SESSIONEXERCISE
 import com.example.exerlog.core.Entities.SESSIONWORKOUT
@@ -56,8 +57,13 @@ interface ExerDAO {
     @Query("SELECT DISTINCT $PRIMARYMUSCLE FROM $EXERCISE WHERE $PRIMARYMUSCLE IS NOT NULL ORDER BY $PRIMARYMUSCLE ASC")
     fun getAllMuscles(): Flow<List<String>>
 
+    @Query("SELECT DISTINCT $PARENTEXERCISEID FROM $SESSIONEXERCISE")
+    fun getUsedExerciseIds(): Flow<List<String>>
+
+
     @Delete
     suspend fun removeSession(session: Session)
+
 
     @Update
     suspend fun updateSession(session: Session)

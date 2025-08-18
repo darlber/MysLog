@@ -9,4 +9,6 @@ object Entities {
     const val PRIMARYMUSCLE = "primaryMuscles"
     const val SESSIONWORKOUT = "session"
     const val SESSIONEXERCISE = "sessionExercise"
+    const val PARENTEXERCISEID = "parentExerciseId"
+
 }

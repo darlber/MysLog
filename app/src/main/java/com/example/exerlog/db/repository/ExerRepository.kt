@@ -34,4 +34,6 @@ interface ExerRepository {
     suspend fun deleteSessionById(sessionId: Long)
     fun getAllEquipment(): Flow<List<String>>
     fun getAllMuscles(): Flow<List<String>>
+    fun getUsedExerciseIds(): Flow<List<String>>
+
 }

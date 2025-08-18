@@ -109,6 +109,8 @@ class ExerRepositoryImpl @Inject constructor(
     override fun getAllMuscles(): Flow<List<String>> {
         return dao.getAllMuscles()
     }
-
+    override fun getUsedExerciseIds(): Flow<List<String>> {
+        return dao.getUsedExerciseIds()
+    }
 
 }

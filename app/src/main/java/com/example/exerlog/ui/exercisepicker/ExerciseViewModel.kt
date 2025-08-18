@@ -42,8 +42,12 @@ class ExerciseViewModel @Inject constructor(
     private val _searchText = MutableStateFlow("")
     val searchText = _searchText.asStateFlow()
 
+    private val _usedExercises = MutableStateFlow<List<String>>(emptyList())
+    val usedExercises = _usedExercises.asStateFlow()
+
     // Lista de todos los equipos disponibles
     val _allEquipment = MutableStateFlow<List<String>>(emptyList())
+
     // Lista de todos los músculos disponibles
     val _allMuscles = MutableStateFlow<List<String>>(emptyList())
 
@@ -54,8 +58,9 @@ class ExerciseViewModel @Inject constructor(
         muscleFilter,
         filterSelected,
         filterUsed,
-        searchText
-    ) { exercises, selected, equipment, muscles, selActive, usedActive, query ->
+        searchText,
+        usedExercises
+    ) { exercises, selected, equipment, muscles, selActive, usedActive, query, useIDs ->
         exercises.filter { exercise ->
             val muscleGroups =
                 //TODO REVISAR SI QUIERO ESTO O NO CON LOS MÚSCULOS SECUNDARIOS
@@ -67,11 +72,11 @@ class ExerciseViewModel @Inject constructor(
                 equipment.isEmpty() || equipment.contains(exercise.equipment.orEmpty())
 
             val selectedCondition = !selActive || selected.contains(exercise)
-
+            val usedCondition = !usedActive || useIDs.contains(exercise.id)
             val searchCondition =
                 query.isBlank() || exercise.name.contains(query, ignoreCase = true)
 
-            muscleCondition && equipmentCondition && selectedCondition && searchCondition
+            muscleCondition && equipmentCondition && selectedCondition && usedCondition && searchCondition
         }.sortedBy { exercise ->
             if (query.isNotBlank()) {
                 exercise.name.length
@@ -96,7 +101,12 @@ class ExerciseViewModel @Inject constructor(
                 _allEquipment.value = equipmentList
             }
         }
-    }
+            viewModelScope.launch {
+                repo.getUsedExerciseIds().collect { ids ->
+                    _usedExercises.value = ids
+                }
+            }
+        }
 
     fun onEvent(event: Event) {
         when (event) {
@@ -154,7 +164,7 @@ class ExerciseViewModel @Inject constructor(
     }
 }
 
-inline fun <T1, T2, T3, T4, T5, T6, T7, R> combine(
+inline fun <T1, T2, T3, T4, T5, T6, T7, T8, R> combine(
     flow: Flow<T1>,
     flow2: Flow<T2>,
     flow3: Flow<T3>,
@@ -162,7 +172,8 @@ inline fun <T1, T2, T3, T4, T5, T6, T7, R> combine(
     flow5: Flow<T5>,
     flow6: Flow<T6>,
     flow7: Flow<T7>,
-    crossinline transform: suspend (T1, T2, T3, T4, T5, T6, T7) -> R
+    flow8: Flow<T8>,
+    crossinline transform: suspend (T1, T2, T3, T4, T5, T6, T7, T8) -> R
 ): Flow<R> {
     return combine(
         flow,
@@ -171,7 +182,8 @@ inline fun <T1, T2, T3, T4, T5, T6, T7, R> combine(
         flow4,
         flow5,
         flow6,
-        flow7
+        flow7,
+        flow8
     ) { args: Array<*> ->
         @Suppress("UNCHECKED_CAST")
         transform(
@@ -182,6 +194,7 @@ inline fun <T1, T2, T3, T4, T5, T6, T7, R> combine(
             args[4] as T5,
             args[5] as T6,
             args[6] as T7,
+            args[7] as T8
         )
     }
 }

@@ -98,9 +98,9 @@ fun ExercisePickerPreview(
                             .padding(end = 8.dp),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        FilterChip(selected = false, onClick = {onFilterSelectedClick}, label = { Text("Selected") })
+                        FilterChip(selected = false, onClick = {onFilterSelectedClick()}, label = { Text("Selected") })
                         Spacer(Modifier.width(8.dp))
-                        FilterChip(selected = false, onClick = {onFilterUsedClick}, label = { Text("Used") })
+                        FilterChip(selected = false, onClick = {onFilterUsedClick()}, label = { Text("Used") })
                         Spacer(Modifier.width(8.dp))
                         FilterChip(
                             selected = false,

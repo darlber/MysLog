@@ -7,6 +7,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,6 +33,7 @@ import com.example.exerlog.db.entities.Exercise
 
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import com.example.exerlog.ui.session.components.SmallPill
 
 //TODO Related exercises
 @Composable
@@ -38,9 +41,8 @@ fun ImagePopup(
     exercise: Exercise,
     onDismiss: () -> Unit
 ) {
-    BackHandler {
-        onDismiss()
-    }
+    BackHandler { onDismiss() }
+
     Box(
         Modifier
             .fillMaxSize()
@@ -59,7 +61,7 @@ fun ImagePopup(
             Column(
                 modifier = Modifier
                     .padding(16.dp)
-                    .verticalScroll(rememberScrollState()), // 👈 scroll en toda la columna
+                    .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Box(Modifier.fillMaxWidth()) {
@@ -67,20 +69,50 @@ fun ImagePopup(
                         onClick = onDismiss,
                         modifier = Modifier.align(Alignment.TopEnd)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Cerrar"
-                        )
+                        Icon(Icons.Default.Close, contentDescription = "Cerrar")
                     }
                 }
 
+                // Título del ejercicio
                 Text(
                     text = exercise.name,
                     style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(bottom = 12.dp)
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
 
-                // Imágenes apiladas verticalmente
+                // SmallPills para músculos primarios y secundarios
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.padding(bottom = 12.dp)
+                ) {
+                    // Primarios: color primario del tema
+                    exercise.primaryMuscles.forEach { muscle ->
+                        Surface(
+                            color = MaterialTheme.colorScheme.error,
+                            shape = MaterialTheme.shapes.small
+                        ) {
+                            SmallPill(
+                                text = muscle,
+                                modifier = Modifier.padding(2.dp)
+                            )
+                        }
+                    }
+
+                    // Secundarios: color secundario del tema
+                    exercise.secondaryMuscles.forEach { muscle ->
+                        Surface(
+                            color = MaterialTheme.colorScheme.secondary,
+                            shape = MaterialTheme.shapes.small
+                        ) {
+                            SmallPill(
+                                text = muscle,
+                                modifier = Modifier.padding(2.dp)
+                            )
+                        }
+                    }
+                }
+
+                // Imágenes
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -102,7 +134,7 @@ fun ImagePopup(
                     }
                 }
 
-                // Instrucciones (también en el mismo scroll)
+                // Instrucciones
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.padding(end = 8.dp)
