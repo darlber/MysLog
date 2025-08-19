@@ -8,11 +8,11 @@ import com.example.exerlog.db.entities.GymSet
 import com.example.exerlog.db.entities.Session
 import com.example.exerlog.db.entities.SessionExercise
 import com.example.exerlog.db.entities.SessionExerciseWithExercise
-import com.example.exerlog.di.DatabaseModule
 import com.example.exerlog.ui.DatabaseModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import timber.log.Timber
 import javax.inject.Inject
@@ -112,5 +112,10 @@ class ExerRepositoryImpl @Inject constructor(
     override fun getUsedExerciseIds(): Flow<List<String>> {
         return dao.getUsedExerciseIds()
     }
+//    override fun getGymSetsForExercise(exerciseId: String): Flow<List<GymSet>> {
+//        return dao.getGymSetsForExercise()
+//            .map { sets -> sets.filter { it.parentSessionExerciseId == exerciseId } }
+//    }
+
 
 }

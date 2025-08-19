@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.exerlog.db.entities.Exercise
+import com.example.exerlog.db.entities.GymSet
 import com.example.exerlog.db.entities.SessionExercise
 import com.example.exerlog.db.repository.ExerRepository
 import com.example.exerlog.utils.Event
@@ -156,6 +157,9 @@ class ExerciseViewModel @Inject constructor(
     private fun openGuide(exercise: Exercise) {
         sendUiEvent(UiEvent.ShowImagePopup(exercise.id))
     }
+//    fun getExerciseGymSets(exerciseId: String): Flow<List<GymSet>> {
+//        return repo.getGymSetsForExercise(exerciseId)
+//    }
 
     private fun sendUiEvent(event: UiEvent) {
         viewModelScope.launch {

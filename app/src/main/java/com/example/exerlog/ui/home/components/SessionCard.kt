@@ -49,7 +49,12 @@ fun SessionCard(
                 onLongClick = { onLongClick() }
             ),
                 // Estilo de la tarjeta
-        shape = MaterialTheme.shapes.medium
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        ),
+
 
     ) {
         Row(

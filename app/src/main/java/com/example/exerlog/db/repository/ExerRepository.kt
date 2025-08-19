@@ -35,5 +35,5 @@ interface ExerRepository {
     fun getAllEquipment(): Flow<List<String>>
     fun getAllMuscles(): Flow<List<String>>
     fun getUsedExerciseIds(): Flow<List<String>>
-
+//    fun getGymSetsForExercise(exerciseId: String): Flow<List<GymSet>>
 }

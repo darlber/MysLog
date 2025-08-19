@@ -97,6 +97,10 @@ interface ExerDAO {
     @Query("SELECT * FROM $GYMSET")
     fun getSetList(): List<GymSet>
 
+//    @Query("SELECT * FROM $GYMSET")
+//    fun getGymSetsForExercise(): Flow<List<GymSet>>
+
+
     @Query("DELETE FROM $SESSIONWORKOUT")
     suspend fun clearSessions()
 

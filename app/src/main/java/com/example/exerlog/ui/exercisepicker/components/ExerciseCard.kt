@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -41,56 +43,49 @@ import kotlin.collections.forEach
 fun ExerciseCard(
     exercise: Exercise,
     selected: Boolean,
-    // cambiado porque dice chatgpt que es mejor
-    // onEvent: (Event) -> Unit
     onEvent: (ExerciseEvent) -> Unit,
     onClick: () -> Unit
 ) {
-
     val targets = exercise.primaryMuscles
     val equipment = exercise.equipment
-    val tonalElevation by animateDpAsState(targetValue = if (selected) 2.dp else 0.dp)
-    val indicatorColor by
-    animateColorAsState(if (selected) MaterialTheme.colorScheme.primary else Color.Transparent)
-    val backgroundColor by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant
-    )
-    val localDensity = LocalDensity.current
-    var rowHeightDp by remember { mutableStateOf(0.dp) }
 
-    val indicatorHeight by
-    animateDpAsState(targetValue = if (selected) rowHeightDp else 0.dp)
+    // Animación de elevación
+    val tonalElevation by animateDpAsState(targetValue = if (selected) 2.dp else 0.dp)
+
+    // Animación de color
+    val containerColor by animateColorAsState(
+        if (selected) MaterialTheme.colorScheme.secondaryContainer
+        else MaterialTheme.colorScheme.surfaceContainerLow
+    )
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 8.dp)
-            .onGloballyPositioned { coordinates ->
-                // Set column height using the LayoutCoordinates
-                rowHeightDp = with(localDensity) {
-                    coordinates.size.height
-                        .minus(95)
-                        .toDp()
-                }
-            },
+            .padding(bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // Indicador lateral
         Surface(
-            color = indicatorColor,
+            color = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
             shape = MaterialTheme.shapes.small,
             modifier = Modifier
                 .width(3.dp)
-                .height(indicatorHeight)
+                .fillMaxHeight()
         ) {}
+
         Spacer(modifier = Modifier.width(4.dp))
-        Surface(
+
+        // Card principal
+        Card(
             onClick = onClick,
-            color = backgroundColor,
             modifier = Modifier
                 .fillMaxWidth()
                 .defaultMinSize(minHeight = 80.dp),
-            tonalElevation = tonalElevation,
-            shape = MaterialTheme.shapes.medium
+            shape = MaterialTheme.shapes.medium,
+            elevation = CardDefaults.cardElevation(defaultElevation = tonalElevation),
+            colors = CardDefaults.cardColors(
+                containerColor = containerColor
+            )
         ) {
             Row(
                 modifier = Modifier
@@ -99,8 +94,7 @@ fun ExerciseCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(
-                    modifier = Modifier
-                        .padding(top = 8.dp),
+                    modifier = Modifier.padding(top = 8.dp),
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
@@ -116,13 +110,9 @@ fun ExerciseCard(
                         targets.forEach { target ->
                             SmallPill(text = target, modifier = Modifier.padding(end = 4.dp))
                         }
-                        equipment
-                            ?.split(",")
-                            ?.map { it.trim() }
-                            ?.forEach { eq ->
-                                SmallPill(text = eq)
-                            }
-
+                        equipment?.split(",")?.map { it.trim() }?.forEach { eq ->
+                            SmallPill(text = eq)
+                        }
                     }
                 }
                 Row(
