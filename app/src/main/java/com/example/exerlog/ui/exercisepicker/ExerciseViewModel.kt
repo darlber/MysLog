@@ -4,19 +4,22 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.exerlog.db.entities.Exercise
-import com.example.exerlog.db.entities.GymSet
 import com.example.exerlog.db.entities.SessionExercise
 import com.example.exerlog.db.repository.ExerRepository
+import com.example.exerlog.ui.session.components.StatEntry
 import com.example.exerlog.utils.Event
 import com.example.exerlog.utils.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -102,12 +105,12 @@ class ExerciseViewModel @Inject constructor(
                 _allEquipment.value = equipmentList
             }
         }
-            viewModelScope.launch {
-                repo.getUsedExerciseIds().collect { ids ->
-                    _usedExercises.value = ids
-                }
+        viewModelScope.launch {
+            repo.getUsedExerciseIds().collect { ids ->
+                _usedExercises.value = ids
             }
         }
+    }
 
     fun onEvent(event: Event) {
         when (event) {
@@ -150,16 +153,34 @@ class ExerciseViewModel @Inject constructor(
                 }
             }
 
+            is ExerciseEvent.OpenStats -> openStats(event.exercise)
             is ExerciseEvent.SearchChanged -> _searchText.value = event.text
+        }
+    }
+
+    private fun openStats(exercise: Exercise) {
+        viewModelScope.launch {
+            val stats = withContext(Dispatchers.IO) {
+                val sessionExercises = repo.getAllSessionExercises().first()
+                    .filter { it.exercise.id == exercise.id }
+
+                sessionExercises.flatMap { se ->
+                    repo.getSetsForExercise(se.sessionExercise.sessionExerciseId).first()
+                }.map { set ->
+                    val sessionExercise = repo.getSessionExerciseById(set.parentSessionExerciseId)
+                    val sessionStart =
+                        repo.getSessionById(sessionExercise.parentSessionId).start.toLocalDate()
+                    StatEntry(date = sessionStart, pesoMax = set.weight ?: 0f)
+                }.sortedBy { it.date }
+            }
+
+            _uiEvent.send(UiEvent.ShowStatsPopup(stats))
         }
     }
 
     private fun openGuide(exercise: Exercise) {
         sendUiEvent(UiEvent.ShowImagePopup(exercise.id))
     }
-//    fun getExerciseGymSets(exerciseId: String): Flow<List<GymSet>> {
-//        return repo.getGymSetsForExercise(exerciseId)
-//    }
 
     private fun sendUiEvent(event: UiEvent) {
         viewModelScope.launch {

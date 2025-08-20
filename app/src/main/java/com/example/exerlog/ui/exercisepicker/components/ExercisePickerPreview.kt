@@ -1,8 +1,11 @@
 package com.example.exerlog.ui.exercisepicker.components
 
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CutCornerShape
@@ -11,7 +14,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessibilityNew
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -37,8 +39,19 @@ fun ExercisePickerPreview(
     onFilterUsedClick: () -> Unit,
     onMuscleFilterClick: () -> Unit,
     onEquipmentFilterClick: () -> Unit,
+    filterSelected: Boolean = false,
+    filterUsed: Boolean = false,
+    muscleFilterActive: Boolean = false,
+    equipmentFilterActive: Boolean = false
+) {
+    val filterColors = FilterChipDefaults.filterChipColors(
+        selectedContainerColor = MaterialTheme.colorScheme.primary,
+        selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+        selectedTrailingIconColor = MaterialTheme.colorScheme.onPrimary,
+        labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        iconColor = MaterialTheme.colorScheme.onSurfaceVariant
+    )
 
-    ) {
     Scaffold(
         floatingActionButton = {
             Box(modifier = Modifier.height(64.dp).width(80.dp)) {
@@ -65,10 +78,7 @@ fun ExercisePickerPreview(
             }
         },
         topBar = {
-            Surface(
-                shape = CutCornerShape(0.dp),
-                tonalElevation = 2.dp
-            ) {
+            Surface(shape = CutCornerShape(0.dp), tonalElevation = 2.dp) {
                 Column {
                     Spacer(Modifier.height(40.dp))
                     TextField(
@@ -76,7 +86,6 @@ fun ExercisePickerPreview(
                         onValueChange = onSearchChanged,
                         label = {
                             Text(
-                                //TODO localizacion
                                 text = "Search",
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.fillMaxWidth()
@@ -98,13 +107,23 @@ fun ExercisePickerPreview(
                             .padding(end = 8.dp),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        FilterChip(selected = false, onClick = {onFilterSelectedClick()}, label = { Text("Selected") })
-                        Spacer(Modifier.width(8.dp))
-                        FilterChip(selected = false, onClick = {onFilterUsedClick()}, label = { Text("Used") })
+                        FilterChip(
+                            selected = filterSelected,
+                            onClick = onFilterSelectedClick,
+                            label = { Text("Selected") },
+                            colors = filterColors
+                        )
                         Spacer(Modifier.width(8.dp))
                         FilterChip(
-                            selected = false,
-                            onClick = {onMuscleFilterClick()},
+                            selected = filterUsed,
+                            onClick = onFilterUsedClick,
+                            label = { Text("Used") },
+                            colors = filterColors
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        FilterChip(
+                            selected = muscleFilterActive,
+                            onClick = onMuscleFilterClick,
                             label = {
                                 Icon(
                                     Icons.Default.AccessibilityNew,
@@ -118,12 +137,13 @@ fun ExercisePickerPreview(
                                     contentDescription = null,
                                     modifier = Modifier.size(22.dp)
                                 )
-                            }
+                            },
+                            colors = filterColors
                         )
                         Spacer(Modifier.width(8.dp))
                         FilterChip(
-                            selected = false,
-                            onClick = {onEquipmentFilterClick()},
+                            selected = equipmentFilterActive,
+                            onClick = onEquipmentFilterClick,
                             label = {
                                 Icon(
                                     Icons.Default.FitnessCenter,
@@ -137,7 +157,8 @@ fun ExercisePickerPreview(
                                     contentDescription = null,
                                     modifier = Modifier.size(22.dp)
                                 )
-                            }
+                            },
+                            colors = filterColors
                         )
                     }
                 }
@@ -149,18 +170,14 @@ fun ExercisePickerPreview(
                 .fillMaxSize()
                 .padding(horizontal = 8.dp)
         ) {
-            item {
-                Spacer(modifier = Modifier.height(paddingValues.calculateTopPadding() + 8.dp))
-            }
+            item { Spacer(modifier = Modifier.height(paddingValues.calculateTopPadding() + 8.dp)) }
             items(exercises) { exercise ->
                 val isSelected = selectedExercises.contains(exercise)
                 ExerciseCard(
                     exercise = exercise,
                     selected = isSelected,
                     onEvent = onEvent
-                ) {
-                    onExerciseClick(exercise)
-                }
+                ) { onExerciseClick(exercise) }
             }
         }
     }
@@ -172,18 +189,17 @@ fun ExercisePickerContentPreview() {
     val dummyExercises = listOf(
         Exercise(
             id = "1",
-            name = "Pene al fallo",
-            force = "TODO()",
-            level = "TODO()",
-            mechanic = "TODO()",
-            equipment = "Barbell",
+            name = "Push Up",
+            force = "Push",
+            level = "Beginner",
+            mechanic = "Compound",
+            equipment = "Bodyweight",
             primaryMuscles = listOf("Chest", "Triceps"),
-            secondaryMuscles = listOf("TODO()"),
-            instructions = listOf("TODO()"),
-            category = "TODO()",
-            images = listOf("TODO()")
+            secondaryMuscles = listOf(),
+            instructions = listOf("Place hands on the ground...", "Lower your body..."),
+            category = "Strength",
+            images = listOf()
         )
-
     )
     ExercisePickerPreview(
         exercises = dummyExercises,
@@ -196,6 +212,10 @@ fun ExercisePickerContentPreview() {
         onFilterSelectedClick = {},
         onFilterUsedClick = {},
         onMuscleFilterClick = {},
-        onEquipmentFilterClick = {}
+        onEquipmentFilterClick = {},
+        filterSelected = true,
+        filterUsed = false,
+        muscleFilterActive = true,
+        equipmentFilterActive = false
     )
 }

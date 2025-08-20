@@ -119,7 +119,7 @@ fun ExerciseCard(
                     modifier = Modifier.fillMaxHeight(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    OpenStatsAction {}
+                    OpenStatsAction { onEvent(ExerciseEvent.OpenStats(exercise)) }
                     OpenInNewAction { onEvent(ExerciseEvent.OpenGuide(exercise)) }
                 }
             }

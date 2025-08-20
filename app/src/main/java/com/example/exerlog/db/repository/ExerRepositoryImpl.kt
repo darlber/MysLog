@@ -112,10 +112,9 @@ class ExerRepositoryImpl @Inject constructor(
     override fun getUsedExerciseIds(): Flow<List<String>> {
         return dao.getUsedExerciseIds()
     }
-//    override fun getGymSetsForExercise(exerciseId: String): Flow<List<GymSet>> {
-//        return dao.getGymSetsForExercise()
-//            .map { sets -> sets.filter { it.parentSessionExerciseId == exerciseId } }
-//    }
+    override fun getSessionExerciseById(id: Long): SessionExercise {
+        return dao.getSessionExerciseById(id)
+    }
 
 
 }
