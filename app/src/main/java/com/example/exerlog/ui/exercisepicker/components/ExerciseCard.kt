@@ -3,6 +3,7 @@ package com.example.exerlog.ui.exercisepicker.components
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -87,15 +88,11 @@ fun ExerciseCard(
                 containerColor = containerColor
             )
         ) {
-            Row(
-                modifier = Modifier
-                    .padding(start = 14.dp, top = 4.dp, bottom = 4.dp, end = 4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Box(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                 Column(
-                    modifier = Modifier.padding(top = 8.dp),
-                    verticalArrangement = Arrangement.SpaceBetween
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .padding(start = 14.dp, top = 8.dp)
                 ) {
                     Text(
                         text = exercise.name,
@@ -104,9 +101,7 @@ fun ExerciseCard(
                             .fillMaxWidth(0.65f),
                         style = MaterialTheme.typography.titleMedium
                     )
-                    Row(
-                        modifier = Modifier.padding(bottom = 4.dp)
-                    ) {
+                    Row(modifier = Modifier.padding(bottom = 4.dp)) {
                         targets.forEach { target ->
                             SmallPill(text = target, modifier = Modifier.padding(end = 4.dp))
                         }
@@ -115,8 +110,9 @@ fun ExerciseCard(
                         }
                     }
                 }
+
                 Row(
-                    modifier = Modifier.fillMaxHeight(),
+                    modifier = Modifier.align(Alignment.CenterEnd),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OpenStatsAction { onEvent(ExerciseEvent.OpenStats(exercise)) }

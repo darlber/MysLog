@@ -52,7 +52,8 @@ fun SessionPreview(
                 timerVisible = timerVisible.value,
                 timerState = timerState,
                 onTimerPress = { timerVisible.value = !timerVisible.value },
-                onFAB = { onEvent(SessionEvent.AddExercise) }
+                onFAB = { onEvent(SessionEvent.AddExercise) },
+                onEvent = onEvent  // ← Agregado
             )
         }
     ) { paddingValues ->

@@ -21,7 +21,6 @@ sealed class SessionEvent : Event {
     object TimerIncreased : SessionEvent()
     object TimerDecreased : SessionEvent()
 
-    object OpenGuide : SessionEvent()
     object AddExercise : SessionEvent()
 
     data class StartTimeChanged(val newTime: LocalTime) : SessionEvent()

@@ -1,5 +1,9 @@
 package com.example.exerlog.ui.session
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -8,16 +12,19 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.exerlog.db.entities.GymSet
 import com.example.exerlog.db.entities.Session
@@ -28,7 +35,9 @@ import com.example.exerlog.ui.home.components.HomeBottomBar
 import com.example.exerlog.ui.session.components.DeletionAlertDialog
 import com.example.exerlog.ui.session.components.HeaderSession
 import com.example.exerlog.ui.session.components.SessionPreview
+import com.example.exerlog.utils.TimerService
 import com.example.exerlog.utils.UiEvent
+import com.example.exerlog.utils.sendTimerAction
 import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,10 +64,33 @@ fun SessionScreen(
     val deleteSessionDialog = remember { mutableStateOf(false) }
     val deleteSetDialog = remember { mutableStateOf<GymSet?>(null) }
     val timerVisible = remember { mutableStateOf(false) }
-    val timerState = remember { TimerState(running = false, time = 0L, maxTime = 0L) }
+
+
+    var timerState by remember { mutableStateOf(TimerState(0L, false, 0L)) }
 
 //    val startTimeDialogState = rememberMaterialDialogState()
 //    val endTimeDialogState = rememberMaterialDialogState()
+
+    val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                intent?.let {
+                    timerState = TimerState(
+                        time = it.getLongExtra(TimerService.Intents.Extras.TIME.toString(), 0L),
+                        running = it.getBooleanExtra(TimerService.Intents.Extras.IS_RUNNING.toString(), false),
+                        maxTime = it.getLongExtra(TimerService.Intents.Extras.MAX_TIME.toString(), 0L)
+                    )
+                }
+            }
+        }
+    DisposableEffect(context) {
+        val intentFilter = IntentFilter(TimerService.Intents.STATUS.toString())
+        context.registerReceiver(receiver, intentFilter)
+        context.sendTimerAction(TimerService.Actions.QUERY)
+
+        onDispose {
+            context.unregisterReceiver(receiver)
+        }
+    }
 
 
     LaunchedEffect(true) {
@@ -69,10 +101,10 @@ fun SessionScreen(
                     uriHandler.openUri(event.url)
                 }
                 is UiEvent.Navigate -> onNavigate(event)
-//                is UiEvent.ToggleTimer -> context.sendTimerAction(TimerService.Actions.TOGGLE)
-//                is UiEvent.ResetTimer -> context.sendTimerAction(TimerService.Actions.RESET)
-//                is UiEvent.IncrementTimer -> context.sendTimerAction(TimerService.Actions.INCREMENT)
-//                is UiEvent.DecrementTimer -> context.sendTimerAction(TimerService.Actions.DECREMENT)
+                is UiEvent.ToggleTimer -> context.sendTimerAction(TimerService.Actions.TOGGLE)
+                is UiEvent.ResetTimer -> context.sendTimerAction(TimerService.Actions.RESET)
+                is UiEvent.IncrementTimer -> context.sendTimerAction(TimerService.Actions.INCREMENT)
+                is UiEvent.DecrementTimer -> context.sendTimerAction(TimerService.Actions.DECREMENT)
                 else -> Unit
             }
         }
