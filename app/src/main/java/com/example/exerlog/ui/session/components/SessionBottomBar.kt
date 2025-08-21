@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.exerlog.ui.TimerState
+import com.example.exerlog.ui.session.SessionEvent
 import com.example.exerlog.ui.session.actions.TimerAction
 import com.example.exerlog.utils.Event
 
@@ -78,15 +79,22 @@ fun SessionBottomBar(
                     Spacer(modifier = Modifier.width(12.dp))
 
                     // Botón de temporizador
+// Botón de temporizador
                     FloatingActionButton(
-                        onClick = onTimerPress,
+                        onClick = {
+                            onTimerPress() // alterna visibilidad
+                            onEvent(SessionEvent.TimerToggled) // envía acción al TimerService
+                        },
                         modifier = Modifier
                             .width(48.dp)
                             .height(48.dp),
                         containerColor = MaterialTheme.colorScheme.primaryContainer
                     ) {
                         TimerAction(
-                            onClick = onTimerPress,
+                            onClick = {
+                                onTimerPress()
+                                onEvent(SessionEvent.TimerToggled)
+                            },
                             timerState = timerState,
                             timerVisible = timerVisible
                         )

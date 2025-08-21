@@ -4,40 +4,26 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.exerlog.db.entities.GymSet
 import com.example.exerlog.db.entities.Session
 import com.example.exerlog.ui.SessionWrapper
 import com.example.exerlog.ui.TimerState
-import com.example.exerlog.ui.home.HomeEvent
-import com.example.exerlog.ui.home.components.HomeBottomBar
 import com.example.exerlog.ui.session.components.DeletionAlertDialog
 import com.example.exerlog.ui.session.components.HeaderSession
 import com.example.exerlog.ui.session.components.SessionPreview
 import com.example.exerlog.utils.TimerService
 import com.example.exerlog.utils.UiEvent
 import com.example.exerlog.utils.sendTimerAction
+import com.example.exerlog.utils.Event
 import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,7 +36,6 @@ fun SessionScreen(
     val context = LocalContext.current
     val scrollState = rememberLazyListState()
     val headerHeight = 120.dp
-    val coroutineScope = rememberCoroutineScope()
 
     // Estado de dominio desde el ViewModel
     val session by viewModel.session.collectAsState(SessionWrapper(Session(), emptyList()))
@@ -59,22 +44,20 @@ fun SessionScreen(
     val selectedExercises by viewModel.selectedExercises.collectAsState()
     val muscleGroups by viewModel.muscleGroups.collectAsState(emptyList())
 
-    // ---- Estado de UI efímero (propio de la pantalla) ----
+    // ---- Estado de UI efímero ----
     val deleteExerciseDialog = remember { mutableStateOf(false) }
     val deleteSessionDialog = remember { mutableStateOf(false) }
     val deleteSetDialog = remember { mutableStateOf<GymSet?>(null) }
     val timerVisible = remember { mutableStateOf(false) }
 
+    // ---- Timer ----
+    val timerState = remember { mutableStateOf(TimerState(0L, false, 0L)) }
 
-    var timerState by remember { mutableStateOf(TimerState(0L, false, 0L)) }
-
-//    val startTimeDialogState = rememberMaterialDialogState()
-//    val endTimeDialogState = rememberMaterialDialogState()
-
-    val receiver = object : BroadcastReceiver() {
+    DisposableEffect(context) {
+        val receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 intent?.let {
-                    timerState = TimerState(
+                    timerState.value = TimerState(
                         time = it.getLongExtra(TimerService.Intents.Extras.TIME.toString(), 0L),
                         running = it.getBooleanExtra(TimerService.Intents.Extras.IS_RUNNING.toString(), false),
                         maxTime = it.getLongExtra(TimerService.Intents.Extras.MAX_TIME.toString(), 0L)
@@ -82,24 +65,17 @@ fun SessionScreen(
                 }
             }
         }
-    DisposableEffect(context) {
-        val intentFilter = IntentFilter(TimerService.Intents.STATUS.toString())
-        context.registerReceiver(receiver, intentFilter)
+        val filter = IntentFilter(TimerService.Intents.STATUS.toString())
+        context.registerReceiver(receiver, filter)
         context.sendTimerAction(TimerService.Actions.QUERY)
-
-        onDispose {
-            context.unregisterReceiver(receiver)
-        }
+        onDispose { context.unregisterReceiver(receiver) }
     }
-
 
     LaunchedEffect(true) {
         viewModel.uiEvent.collect { event ->
             Timber.d("UiEvent Received: $event")
             when (event) {
-                is UiEvent.OpenWebsite -> {
-                    uriHandler.openUri(event.url)
-                }
+                is UiEvent.OpenWebsite -> uriHandler.openUri(event.url)
                 is UiEvent.Navigate -> onNavigate(event)
                 is UiEvent.ToggleTimer -> context.sendTimerAction(TimerService.Actions.TOGGLE)
                 is UiEvent.ResetTimer -> context.sendTimerAction(TimerService.Actions.RESET)
@@ -122,8 +98,9 @@ fun SessionScreen(
         deleteSessionDialog = deleteSessionDialog,
         deleteSetDialog = deleteSetDialog,
         timerVisible = timerVisible,
-        timerState = timerState
+        timerState = timerState.value
     )
+
     // ---- Diálogos ----
     if (deleteExerciseDialog.value) {
         DeletionAlertDialog(
@@ -132,8 +109,8 @@ fun SessionScreen(
                 viewModel.onEvent(SessionEvent.RemoveSelectedExercises)
                 deleteExerciseDialog.value = false
             },
-            title = { Text("Remove ${selectedExercises.size} Exercise${if (selectedExercises.size > 1) "s" else ""}?") },
-            text = { Text("Are you sure you want to remove the selected exercises from this session? This action can not be undone.") }
+            title = { androidx.compose.material3.Text("Remove ${selectedExercises.size} Exercise${if (selectedExercises.size > 1) "s" else ""}?") },
+            text = { androidx.compose.material3.Text("Are you sure you want to remove the selected exercises from this session? This action can not be undone.") }
         )
     }
 
@@ -144,8 +121,8 @@ fun SessionScreen(
                 viewModel.onEvent(SessionEvent.RemoveSession)
                 deleteSessionDialog.value = false
             },
-            title = { Text("Delete Session?") },
-            text = { Text("Are you sure you want to delete this session and all of its contents? This action can not be undone.") }
+            title = { androidx.compose.material3.Text("Delete Session?") },
+            text = { androidx.compose.material3.Text("Are you sure you want to delete this session and all of its contents? This action can not be undone.") }
         )
     }
 
@@ -156,20 +133,8 @@ fun SessionScreen(
                 deleteSetDialog.value?.let { viewModel.onEvent(SessionEvent.SetDeleted(it)) }
                 deleteSetDialog.value = null
             },
-            title = { Text("Delete Set?") },
-            text = { Text("Are you sure you want to delete this set? This action can not be undone.") }
+            title = { androidx.compose.material3.Text("Delete Set?") },
+            text = { androidx.compose.material3.Text("Are you sure you want to delete this set? This action can not be undone.") }
         )
     }
 }
-
-
-
-private fun Unit.show() {
-    TODO("Not yet implemented")
-}
-
-fun rememberMaterialDialogState() {
-    TODO("Not yet implemented")
-}
-
-
