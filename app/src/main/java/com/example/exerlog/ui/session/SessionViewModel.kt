@@ -9,6 +9,7 @@ import com.example.exerlog.db.entities.Session
 import com.example.exerlog.db.repository.ExerRepository
 import com.example.exerlog.ui.ExerciseWrapper
 import com.example.exerlog.ui.SessionWrapper
+import com.example.exerlog.ui.session.actions.OpenInFinish
 import com.example.exerlog.utils.Event
 import com.example.exerlog.utils.UiEvent
 import com.example.exerlog.utils.sortedListOfMuscleGroups
@@ -18,6 +19,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -193,7 +195,12 @@ class SessionViewModel @Inject constructor(
                 }
             }
             is SessionEvent.FinishSession -> {
-                finishSession() 
+                finishSession()
+                viewModelScope.launch {
+                    val exercises = exercises.first() // recogemos los ejercicios actuales
+                    val result = OpenInFinish().calculateAndFetchFact(exercises)
+                    sendUiEvent(UiEvent.ShowFinishResult(result))
+                }
             }
 
             else -> Unit

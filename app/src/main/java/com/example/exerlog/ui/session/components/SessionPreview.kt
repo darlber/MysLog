@@ -1,6 +1,6 @@
 package com.example.exerlog.ui.session.components
 
-
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -15,6 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.example.exerlog.db.entities.Exercise
 import com.example.exerlog.db.entities.GymSet
 import com.example.exerlog.db.entities.Session
@@ -53,7 +54,7 @@ fun SessionPreview(
                 timerState = timerState,
                 onTimerPress = { timerVisible.value = !timerVisible.value },
                 onFAB = { onEvent(SessionEvent.AddExercise) },
-                onEvent = onEvent  // ← Agregado
+                onEvent = onEvent
             )
         }
     ) { paddingValues ->
@@ -62,7 +63,7 @@ fun SessionPreview(
             state = scrollState,
             contentPadding = paddingValues
         ) {
-            // Header como primer item de la lista
+            // Header
             item {
                 HeaderSession(
                     sessionWrapper = session,
@@ -82,7 +83,7 @@ fun SessionPreview(
             itemsIndexed(
                 items = exercises,
                 key = { _, exercise -> exercise.sessionExercise.sessionExerciseId }
-            ) { index, exercise ->
+            ) { _, exercise ->
                 val expanded =
                     exercise.sessionExercise.sessionExerciseId == expandedExercise?.sessionExercise?.sessionExerciseId
                 val selected = selectedExercises.contains(exercise)
@@ -99,7 +100,7 @@ fun SessionPreview(
                 }
             }
 
-            // Spacer para evitar que el último item quede pegado al bottom bar
+            // Spacer para el bottom bar
             item {
                 Spacer(modifier = Modifier.height(paddingValues.calculateBottomPadding()))
             }
@@ -145,12 +146,12 @@ fun SessionScreenPreviewContent() {
     )
 
     val dummyMuscleGroups = listOf("Chest", "Triceps", "Shoulders")
-    // Estados locales de prueba
     val deleteExerciseDialog = remember { mutableStateOf(false) }
     val deleteSessionDialog = remember { mutableStateOf(false) }
     val deleteSetDialog = remember { mutableStateOf<GymSet?>(null) }
     val timerVisible = remember { mutableStateOf(true) }
-    val timerState = remember { TimerState(running = false, time = 0L, maxTime = 0L) }
+    val timerState = TimerState(running = false, time = 0L, maxTime = 0L)
+
     SessionPreview(
         session = dummySession,
         exercises = listOf(dummyExerciseWrapper),

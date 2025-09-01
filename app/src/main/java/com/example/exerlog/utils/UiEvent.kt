@@ -1,6 +1,6 @@
 package com.example.exerlog.utils
 
-import com.example.exerlog.db.entities.GymSet
+import com.example.exerlog.ui.session.actions.FinishResult
 import com.example.exerlog.ui.session.components.StatEntry
 
 sealed class UiEvent {
@@ -15,5 +15,7 @@ sealed class UiEvent {
     object ToggleTimer: UiEvent()
     object ResetTimer: UiEvent()
     object IncrementTimer: UiEvent()
-    object DecrementTimer: UiEvent()
+    object DecrementTimer : UiEvent()
+    data class ShowFinishResult(val result: FinishResult) : UiEvent()
+
 }
