@@ -125,6 +125,18 @@ class SessionViewModel @Inject constructor(
                 viewModelScope.launch {
                     withContext(Dispatchers.IO) {
                         repo.deleteSet(event.set)
+
+                        // Reconstruir la lista de ExerciseWrappers con nueva referencia de sets
+                        val updatedExercises = exercises.first().map { ew ->
+                            if (ew.sessionExercise.sessionExerciseId == event.set.parentSessionExerciseId) {
+                                ew.copy(sets = ew.sets.filter { it.setId != event.set.setId })
+                            } else ew
+                        }
+
+                        // Actualizar expandedExercise con la nueva referencia
+                        _expandedExercise.value = _expandedExercise.value?.let { expanded ->
+                            updatedExercises.find { it.sessionExercise.sessionExerciseId == expanded.sessionExercise.sessionExerciseId }
+                        }
                     }
                 }
             }
@@ -209,10 +221,14 @@ class SessionViewModel @Inject constructor(
 
     fun finishSession() {
         val now = LocalDateTime.now()
-        _session.value = _session.value.copy(end = now)
-        viewModelScope.launch {
-            repo.updateSession(_session.value)
-            Timber.d("Session finished at: $now")
+        if (_session.value.end == null) { // solo actualiza si end es null
+            _session.value = _session.value.copy(end = now)
+            viewModelScope.launch {
+                repo.updateSession(_session.value)
+                Timber.d("Session finished at: $now")
+            }
+        } else {
+            Timber.d("Session already has an end time: ${_session.value.end}")
         }
     }
 //    private fun openGuide(exercise: Exercise) {

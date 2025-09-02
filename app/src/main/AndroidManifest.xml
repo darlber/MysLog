@@ -3,6 +3,7 @@
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.VIBRATE" />
     <application
         android:name=".ExerLogApp"
         android:allowBackup="true"
@@ -25,6 +26,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".utils.TimerService" />
+        <service android:name=".utils.TimerService"
+        android:exported="false"
+        android:foregroundServiceType="dataSync" />
     </application>
+
 </manifest>

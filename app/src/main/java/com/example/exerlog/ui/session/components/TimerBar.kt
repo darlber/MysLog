@@ -13,8 +13,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.exerlog.ui.TimerState
 import com.example.exerlog.ui.session.SessionEvent
@@ -27,14 +29,17 @@ fun TimerBar(
   timerState: TimerState,
   onEvent: (Event) -> Unit
 ) {
-  val timerTime = timerState.time
+    val windowInfo = LocalWindowInfo.current
+    val maxWidthDp: Dp = windowInfo.containerSize.width.dp
+    val timerWidth = maxWidthDp * (timerState.time.toFloat() / timerState.maxTime)
+
+    val timerToggleIcon = if (timerState.running) Icons.Default.Pause else Icons.Default.PlayArrow
+    val timerTimeText = if (timerState.time > 0L) timerState.time.toTimerString() else timerState.maxTime.toTimerString()
+
+    timerState.time
   val timerRunning = timerState.running
-  val timerMaxTime = timerState.maxTime
-  val maxWidth = LocalConfiguration.current.screenWidthDp
-  val timerWidth = maxWidth.times(timerTime.toFloat() / timerMaxTime).toInt().dp
-  val timerToggleIcon = if (timerRunning) Icons.Default.Pause else Icons.Default.PlayArrow
-  val timerTimeText =
-    if (timerTime > 0L) timerTime.toTimerString() else timerMaxTime.toTimerString()
+    timerState.maxTime
+
   val timerTonalElevation by animateDpAsState(targetValue = if (timerRunning) 140.dp else 14.dp)
 
   Surface(

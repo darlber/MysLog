@@ -83,7 +83,7 @@ fun SessionBottomBar(
                     FloatingActionButton(
                         onClick = {
                             onTimerPress() // alterna visibilidad
-                            onEvent(SessionEvent.TimerToggled) // envía acción al TimerService
+
                         },
                         modifier = Modifier
                             .width(48.dp)
@@ -93,7 +93,7 @@ fun SessionBottomBar(
                         TimerAction(
                             onClick = {
                                 onTimerPress()
-                                onEvent(SessionEvent.TimerToggled)
+
                             },
                             timerState = timerState,
                             timerVisible = timerVisible

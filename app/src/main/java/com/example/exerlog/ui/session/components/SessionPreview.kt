@@ -94,7 +94,7 @@ fun SessionPreview(
                     selected = selected,
                     onEvent = onEvent,
                     onLongClick = { onEvent(SessionEvent.ExerciseSelected(exercise)) },
-                    onSetDeleted = { /* TODO if needed */ }
+                    onSetDeleted = { deleteSetDialog.value = it }
                 ) {
                     onEvent(SessionEvent.ExerciseExpanded(exercise))
                 }

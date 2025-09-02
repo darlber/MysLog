@@ -51,7 +51,6 @@ fun SessionScreen(
     val timerState = remember { mutableStateOf(TimerState(0L, false, 0L)) }
     val finishResult = remember { mutableStateOf<FinishResult?>(null) }
 
-    // ---- Timer ----
     DisposableEffect(context) {
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
@@ -64,9 +63,19 @@ fun SessionScreen(
                 }
             }
         }
+
         val filter = IntentFilter(TimerService.Intents.STATUS.toString())
-        context.registerReceiver(receiver, filter)
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            // Android 13+ requires explicit receiver flag
+            context.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            @Suppress("DEPRECATION")
+            context.registerReceiver(receiver, filter)
+        }
+
         context.sendTimerAction(TimerService.Actions.QUERY)
+
         onDispose { context.unregisterReceiver(receiver) }
     }
 

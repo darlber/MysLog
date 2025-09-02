@@ -1,4 +1,5 @@
 package com.example.exerlog.ui.session.components
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
@@ -8,6 +9,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
@@ -43,92 +45,93 @@ fun ExpandedExerciseContent(
             val localFocusManager = LocalFocusManager.current
             val reps = set.reps ?: ""
             val weight = set.weight ?: ""
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier
-                    .padding(bottom = 4.dp, start = 6.dp, end = 8.dp)
-                    .fillMaxWidth()
-                    .clickable { }
-            ) {
-                IconButton(
-                    onClick = { onSetDeleted(set) },
-                    modifier = Modifier.padding(end = 8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Delete Set",
-                        tint = LocalContentColor.current.copy(alpha = 0.75f)
-                    )
-                }
-                InputField(
-                    label = "reps",
-                    initialValue = reps.toString(),
-                    onValueChange = {
-                        val tfv = it.text.trim().toIntOrNull()
-                        if (tfv != null) {
-                            onEvent(SessionEvent.SetChanged(set.copy(reps = tfv)))
-                            true
-                        } else {
-                            false
-                        }
-                    },
-                    keyboardActions = KeyboardActions(
-                        onNext = { localFocusManager.moveFocus(FocusDirection.Next) }
-                    ),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number,
-                        imeAction = ImeAction.Next
-                    ),
-                    autoRequestFocus = true
-                )
-                InputField(
-                    label = "kg",
-                    initialValue = weight.toString(),
-                    onValueChange = {
-                        val tfv = it.text.trim().toFloatOrNull()
-                        if (tfv != null) {
-                            onEvent(SessionEvent.SetChanged(set.copy(weight = tfv)))
-                            true
-                        } else {
-                            false
-                        }
-                    },
-                    keyboardActions = KeyboardActions(
-                        onDone = {
-                            localFocusManager.moveFocus(FocusDirection.Next)
-                            localFocusManager.clearFocus()
-                        }
-                    ),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number,
-                        imeAction = ImeAction.Done
-                    )
-                )
-                Surface(
-                    onClick = {
-                        onEvent(SessionEvent.SetChanged(set.copy(tipoSet = TipoSet.next(set.tipoSet))))
-                    },
-                    color = setTypeColor(set.tipoSet, MaterialTheme.colorScheme),
-                    shape = MaterialTheme.shapes.small,
+            key(set.setId) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier
-                        .defaultMinSize(minWidth = 100.dp)
-                        .padding(start = 12.dp)
+                        .padding(bottom = 4.dp, start = 6.dp, end = 8.dp)
+                        .fillMaxWidth()
+                        .clickable { }
                 ) {
-                    Text(
-                        text = context.getString(set.tipoSet),
-                        modifier = Modifier.padding(6.dp),
-                        textAlign = TextAlign.Center
+                    IconButton(
+                        onClick = { onSetDeleted(set) },
+                        modifier = Modifier.padding(end = 8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Delete Set",
+                            tint = LocalContentColor.current.copy(alpha = 0.75f)
+                        )
+                    }
+                    InputField(
+                        label = "reps",
+                        initialValue = reps.toString(),
+                        onValueChange = {
+                            val tfv = it.text.trim().toIntOrNull()
+                            if (tfv != null) {
+                                onEvent(SessionEvent.SetChanged(set.copy(reps = tfv)))
+                                true
+                            } else {
+                                false
+                            }
+                        },
+                        keyboardActions = KeyboardActions(
+                            onNext = { localFocusManager.moveFocus(FocusDirection.Next) }
+                        ),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Next
+                        ),
+                        autoRequestFocus = true
                     )
+                    InputField(
+                        label = "kg",
+                        initialValue = weight.toString(),
+                        onValueChange = {
+                            val tfv = it.text.trim().toFloatOrNull()
+                            if (tfv != null) {
+                                onEvent(SessionEvent.SetChanged(set.copy(weight = tfv)))
+                                true
+                            } else {
+                                false
+                            }
+                        },
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                localFocusManager.moveFocus(FocusDirection.Next)
+                                localFocusManager.clearFocus()
+                            }
+                        ),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Done
+                        )
+                    )
+                    Surface(
+                        onClick = {
+                            onEvent(SessionEvent.SetChanged(set.copy(tipoSet = TipoSet.next(set.tipoSet))))
+                        },
+                        color = setTypeColor(set.tipoSet, MaterialTheme.colorScheme),
+                        shape = MaterialTheme.shapes.small,
+                        modifier = Modifier
+                            .defaultMinSize(minWidth = 100.dp)
+                            .padding(start = 12.dp)
+                    ) {
+                        Text(
+                            text = context.getString(set.tipoSet),
+                            modifier = Modifier.padding(6.dp),
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }
-        IconButton(
-            onClick = { onSetCreated() }
-        ) {
-            Icon(imageVector = Icons.Default.Add, contentDescription = "Add new set")
-        }
+            IconButton(
+                onClick = { onSetCreated() }
+            ) {
+                Icon(imageVector = Icons.Default.Add, contentDescription = "Add new set")
+            }
     }
 }
 
@@ -142,13 +145,32 @@ fun setTypeColor(tipoSet: Int, colorScheme: ColorScheme): Color {
         else -> Color.White
     }
 }
+
 @Preview(showBackground = true)
 @Composable
 fun PreviewExpandedExerciseContent() {
     val sampleSets = listOf(
-        GymSet(setId = 1, parentSessionExerciseId = 1L, reps = 8, weight = 50f, tipoSet = TipoSet.WARMUP),
-        GymSet(setId = 2, parentSessionExerciseId = 1L, reps = 10, weight = 70f, tipoSet = TipoSet.NORMAL),
-        GymSet(setId = 3, parentSessionExerciseId = 1L, reps = 6, weight = 90f, tipoSet = TipoSet.HARD)
+        GymSet(
+            setId = 1,
+            parentSessionExerciseId = 1L,
+            reps = 8,
+            weight = 50f,
+            tipoSet = TipoSet.WARMUP
+        ),
+        GymSet(
+            setId = 2,
+            parentSessionExerciseId = 1L,
+            reps = 10,
+            weight = 70f,
+            tipoSet = TipoSet.NORMAL
+        ),
+        GymSet(
+            setId = 3,
+            parentSessionExerciseId = 1L,
+            reps = 6,
+            weight = 90f,
+            tipoSet = TipoSet.HARD
+        )
     )
 
     ExpandedExerciseContent(

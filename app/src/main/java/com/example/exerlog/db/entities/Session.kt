@@ -8,7 +8,6 @@ import java.time.LocalDateTime
 /**
  * A workout-session contains multiple SessionExercises. Has a start and end-time.
  */
-//TODO: end time is not used in the app, but could be useful for tracking session duration
 @Entity(tableName = SESSIONWORKOUT)
 data class Session(
     @PrimaryKey(autoGenerate = true)

@@ -8,11 +8,12 @@ import android.content.Context
 import android.content.Intent
 import android.os.CountDownTimer
 import android.os.IBinder
+import android.os.VibrationEffect
+import android.os.Vibrator
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.example.exerlog.MainActivity
 import com.example.exerlog.R
-
 import timber.log.Timber
 import kotlin.math.roundToInt
 
@@ -24,14 +25,16 @@ class TimerService : Service() {
   private val increment = 30 * 1000L
 
   private var showNotification = false
-
   private var timer: WorkoutTimer? = null
 
   private lateinit var notificationManager: NotificationManager
 
-  override fun onBind(intent: Intent?): IBinder? {
-    return null
+  // Vibrator
+  private val vibrator: Vibrator by lazy {
+    getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
   }
+
+  override fun onBind(intent: Intent?): IBinder? = null
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
     notificationManager =
@@ -209,6 +212,12 @@ class TimerService : Service() {
     override fun onFinish() {
       Timber.d("Timer finished")
       time = maxTime
+
+      // Vibrar una vez cuando termina
+      if (vibrator.hasVibrator()) {
+        vibrator.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
+      }
+
       alert(buildFinishedNotification())
       reset()
     }
