@@ -11,6 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -33,7 +34,7 @@ fun ExercisePicker(
     val searchText by viewModel.searchText.collectAsState()
     val equipmentFilter by viewModel.equipmentFilter.collectAsState()
     val muscleFilter by viewModel.muscleFilter.collectAsState()
-
+    val context = LocalContext.current
 
     val allEquipment by viewModel._allEquipment.collectAsState() // <- lista completa desde DB
     val allMusclesList by viewModel._allMuscles.collectAsState() // <- lista completa desde DB
@@ -134,7 +135,7 @@ fun ExercisePicker(
         val exercise = exercises.find { it.id == showPopupExerciseId }
         if (exercise != null) {
             ImagePopup(
-                exercise = exercise, onDismiss = { showPopupExerciseId = null })
+                exercise = exercise, onDismiss = { showPopupExerciseId = null }, context = context)
         }
     }
 }

@@ -95,7 +95,7 @@ class ExerRepositoryImpl @Inject constructor(
     override suspend fun clearDatabase() {
         db.clearAllTables()
         dao.deletePrimaryKeyIndex()
-        populateDatabaseCallback.prepopulateDatabase()
+        populateDatabaseCallback.checkAndPopulateDatabase()
 
     }
 

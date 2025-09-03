@@ -1,5 +1,6 @@
 package com.example.exerlog.ui.exercisepicker.components
 
+import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -34,20 +35,22 @@ import com.example.exerlog.db.entities.Exercise
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.exerlog.core.Constants.Companion.BASE_IMAGE_URL
 import com.example.exerlog.ui.session.components.SmallPill
+import java.io.File
 
 //TODO Related exercises
 @Composable
 fun ImagePopup(
     exercise: Exercise,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    context: Context  // Necesario para acceder a filesDir
 ) {
     BackHandler { onDismiss() }
 
     Box(
         Modifier
             .fillMaxSize()
-            //dim background to dark with some transparency
             .background(Color(0xAA000000))
             .clickable { onDismiss() },
         contentAlignment = Alignment.Center
@@ -75,7 +78,6 @@ fun ImagePopup(
                     }
                 }
 
-                // Título del ejercicio
                 Text(
                     text = exercise.name,
                     style = MaterialTheme.typography.titleLarge,
@@ -86,7 +88,6 @@ fun ImagePopup(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     modifier = Modifier.padding(bottom = 12.dp)
                 ) {
-                    // Primarios: color primario del tema
                     exercise.primaryMuscles.forEach { muscle ->
                         SmallPill(
                             text = muscle,
@@ -96,7 +97,6 @@ fun ImagePopup(
                         )
                     }
 
-                    // Secundarios: color secundario del tema
                     exercise.secondaryMuscles.forEach { muscle ->
                         SmallPill(
                             text = muscle,
@@ -107,8 +107,6 @@ fun ImagePopup(
                     }
                 }
 
-
-                // Imágenes
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -117,7 +115,14 @@ fun ImagePopup(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     exercise.images.forEach { imageAssetName ->
-                        val path = "file:///android_asset/exercises/$imageAssetName"
+                        // Revisar si existe local
+                        val localFile = File(context.filesDir, "exercises/$imageAssetName")
+                        val path = if (localFile.exists()) {
+                            "file://${localFile.absolutePath}"
+                        } else {
+                            BASE_IMAGE_URL + imageAssetName
+                        }
+
                         val painter = rememberAsyncImagePainter(path)
                         Image(
                             painter = painter,
@@ -130,7 +135,6 @@ fun ImagePopup(
                     }
                 }
 
-                // Instrucciones
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.padding(end = 8.dp)
@@ -167,6 +171,7 @@ fun ImagePopupPreview() {
             equipment = "TODO()",
             category = "TODO()"
         ),
-        onDismiss = {}
+        onDismiss = {},
+        context = androidx.compose.ui.platform.LocalContext.current
     )
 }
