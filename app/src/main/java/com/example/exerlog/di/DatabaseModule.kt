@@ -40,6 +40,10 @@ class DatabaseModule {
     }
 
     @Provides
-    fun provideRepositoryImpl(db: GymDatabase, dao: ExerDAO, pd: PopulateDatabaseCallback): ExerRepository =
-        ExerRepositoryImpl(dao, db, pd)
+    fun provideRepositoryImpl(
+        @ApplicationContext context: Context,
+        db: GymDatabase,
+        dao: ExerDAO,
+        pd: PopulateDatabaseCallback
+    ): ExerRepository = ExerRepositoryImpl(dao, db, pd, context)
 }

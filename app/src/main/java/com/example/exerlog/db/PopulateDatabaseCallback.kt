@@ -5,9 +5,9 @@ import android.widget.Toast
 import androidx.core.content.edit
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.example.exerlog.core.Constants
 import com.example.exerlog.core.Constants.Companion.BASE_IMAGE_URL
 import com.example.exerlog.core.Constants.Companion.CACHE_FILENAME
-import com.example.exerlog.core.Constants.Companion.GITHUB_URL
 import com.example.exerlog.core.Constants.Companion.VERSION_KEY
 import com.example.exerlog.db.entities.ExercisesVersion
 import com.example.exerlog.db.repository.ExerRepository
@@ -31,94 +31,72 @@ class PopulateDatabaseCallback @Inject constructor(
     private val exerciseDaoProvider: Provider<ExerDAO>
 ) : RoomDatabase.Callback() {
 
+    private val supportedLanguages = listOf("en", "es") // agregar más si quieres
 
     override fun onCreate(db: SupportSQLiteDatabase) {
         super.onCreate(db)
         CoroutineScope(Dispatchers.IO).launch {
-            checkAndPopulateDatabase()
+            prefetchAllLanguages()
+            checkAndPopulateDatabase(getCurrentLanguage())
         }
     }
 
     override fun onOpen(db: SupportSQLiteDatabase) {
         super.onOpen(db)
         CoroutineScope(Dispatchers.IO).launch {
-            checkAndPopulateDatabase()
+            checkAndPopulateDatabase(getCurrentLanguage())
         }
     }
 
-    suspend fun checkAndPopulateDatabase() {
-        try {
-            val jsonString = downloadJsonFromGitHub(GITHUB_URL) ?: readCache() ?: run {
+    /** Descarga todos los JSON soportados al instalar la app */
+    private suspend fun prefetchAllLanguages() {
+        supportedLanguages.forEach { lang ->
+            val jsonUrl = Constants.getJsonUrlForLanguage(lang)
+            val jsonString = downloadJsonFromGitHub(jsonUrl) ?: return@forEach
+            val file = File(context.filesDir, "exercises_$lang.json")
+            file.writeText(jsonString)
+            Timber.d("JSON $lang prefetch guardado en ${file.absolutePath}")
+        }
+    }
+
+    /** Obtiene el idioma actual del dispositivo o app */
+    private fun getCurrentLanguage(): String {
+        val locale = context.resources.configuration.locales.get(0)
+        return if (supportedLanguages.contains(locale.language)) locale.language else "en"
+    }
+
+    /** Chequea la DB y repopula solo si hay nueva versión */
+    suspend fun checkAndPopulateDatabase(lang: String) {
+        Timber.i("checkAndPopulateDatabase: Started for language $lang")
+        val jsonFile = File(context.filesDir, "exercises_$lang.json")
+        val jsonString = if (jsonFile.exists()) {
+            jsonFile.readText().also { Timber.d("Usando JSON cacheado para $lang") }
+        } else {
+            val url = Constants.getJsonUrlForLanguage(lang)
+            downloadJsonFromGitHub(url) ?: run {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "No JSON disponible", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "No JSON disponible para $lang", Toast.LENGTH_SHORT).show()
                 }
-                Timber.w("No JSON available, aborting prepopulation")
+                Timber.w("No JSON available, aborting prepopulation for $lang")
                 return
             }
-
-            val typeToken = object : TypeToken<ExercisesVersion>() {}.type
-            val exercisesVersion: ExercisesVersion = Gson().fromJson(jsonString, typeToken)
-            val exercises = exercisesVersion.exercises
-
-            val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-            val localVersion = prefs.getInt(VERSION_KEY, 0)
-
-            if (exercisesVersion.version > localVersion) {
-                Timber.i("Updating database from version $localVersion to ${exercisesVersion.version}")
-                exerciseDaoProvider.get().insertAll(exercises)
-
-                // Guardar versión y cache
-                prefs.edit { putInt(VERSION_KEY, exercisesVersion.version) }
-                writeCache(jsonString)
-
-                // Descargar y cachear imágenes
-                exercises.forEach { exercise ->
-                    exercise.images.forEach { imageName ->
-                        val localFile = File(context.filesDir, "exercises/$imageName")
-                        if (!localFile.exists()) {
-                            val imageUrl = BASE_IMAGE_URL + imageName
-                            downloadAndCacheImage(imageUrl, localFile)
-                        }
-                    }
-                }
-
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        context,
-                        "Base de datos actualizada a la versión ${exercisesVersion.version}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-                Timber.i("${exercises.size} exercises inserted successfully.")
-            } else {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "Base de datos ya está actualizada", Toast.LENGTH_SHORT)
-                        .show()
-                }
-                Timber.d("Database is already up-to-date. Version: $localVersion")
-            }
-
-        } catch (e: Exception) {
-            Timber.e(e, "Exception during database prepopulation")
-            withContext(Dispatchers.Main) {
-                Toast.makeText(context, "Error al actualizar base de datos", Toast.LENGTH_SHORT)
-                    .show()
-            }
         }
-    }
 
-    private fun readCache(): String? {
-        val file = File(context.filesDir, CACHE_FILENAME)
-        return if (file.exists()) {
-            Timber.d("JSON cargado desde cache local")
-            file.readText()
-        } else null
-    }
+        val typeToken = object : TypeToken<ExercisesVersion>() {}.type
+        val exercisesVersion: ExercisesVersion = Gson().fromJson(jsonString, typeToken)
+        val exercises = exercisesVersion.exercises
 
-    private fun writeCache(jsonString: String) {
-        val file = File(context.filesDir, CACHE_FILENAME)
-        file.writeText(jsonString)
-        Timber.d("JSON guardado en cache local")
+        val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val localVersion = prefs.getInt("${VERSION_KEY}_$lang", 0)
+
+        if (exercisesVersion.version > localVersion) {
+            Timber.i("Updating database for $lang from version $localVersion to ${exercisesVersion.version}")
+            exerciseDaoProvider.get().insertAll(exercises)
+            prefs.edit { putInt("${VERSION_KEY}_$lang", exercisesVersion.version) }
+            Timber.i("${exercises.size} exercises inserted successfully for $lang")
+        } else {
+            Timber.d("Database already up-to-date for $lang. Version: $localVersion")
+        }
     }
 
     private fun downloadJsonFromGitHub(url: String): String? {
@@ -127,35 +105,15 @@ class PopulateDatabaseCallback @Inject constructor(
             val request = Request.Builder().url(url).build()
             val response = client.newCall(request).execute()
             if (response.isSuccessful) {
-                Timber.d("JSON descargado desde GitHub")
+                Timber.d("JSON descargado desde GitHub: $url")
                 response.body?.string()
             } else {
                 Timber.w("Failed to download JSON, HTTP ${response.code}")
                 null
             }
         } catch (e: Exception) {
-            Timber.e(e, "Error downloading JSON from GitHub")
+            Timber.e(e, "Error downloading JSON from GitHub: $url")
             null
-        }
-    }
-
-    private fun downloadAndCacheImage(imageUrl: String, localFile: File) {
-        try {
-            val client = OkHttpClient()
-            val request = Request.Builder().url(imageUrl).build()
-            val response = client.newCall(request).execute()
-            if (response.isSuccessful) {
-                val bytes = response.body?.bytes()
-                if (bytes != null) {
-                    localFile.parentFile?.mkdirs() // Crear directorios si no existen
-                    localFile.writeBytes(bytes)
-                    Timber.d("Imagen guardada en cache: ${localFile.absolutePath}")
-                }
-            } else {
-                Timber.w("Fallo al descargar imagen $imageUrl, HTTP ${response.code}")
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "Error descargando imagen $imageUrl")
         }
     }
 }

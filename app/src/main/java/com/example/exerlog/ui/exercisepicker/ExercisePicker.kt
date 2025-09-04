@@ -135,7 +135,7 @@ fun ExercisePicker(
         val exercise = exercises.find { it.id == showPopupExerciseId }
         if (exercise != null) {
             ImagePopup(
-                exercise = exercise, onDismiss = { showPopupExerciseId = null }, context = context)
+                exercise = exercise, onDismiss = { showPopupExerciseId = null })
         }
     }
 }
