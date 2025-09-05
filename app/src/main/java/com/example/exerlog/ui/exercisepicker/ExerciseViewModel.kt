@@ -49,14 +49,13 @@ class ExerciseViewModel @Inject constructor(
     private val _usedExercises = MutableStateFlow<List<String>>(emptyList())
     val usedExercises = _usedExercises.asStateFlow()
 
-    // Lista de todos los equipos disponibles
     val _allEquipment = MutableStateFlow<List<String>>(emptyList())
-
-    // Lista de todos los músculos disponibles
     val _allMuscles = MutableStateFlow<List<String>>(emptyList())
 
+    //NUEVO: usar exercisesFlow dinámico
+
     val filteredExercises = combine(
-        repo.getAllExercises(),
+        repo.getExercisesFlow(), // dinámico según idioma
         selectedExercises,
         equipmentFilter,
         muscleFilter,
@@ -66,27 +65,21 @@ class ExerciseViewModel @Inject constructor(
         usedExercises
     ) { exercises, selected, equipment, muscles, selActive, usedActive, query, useIDs ->
         exercises.filter { exercise ->
-            val muscleGroups =
-                //TODO REVISAR SI QUIERO ESTO O NO CON LOS MÚSCULOS SECUNDARIOS
-                (exercise.primaryMuscles + exercise.secondaryMuscles).map { it.lowercase() }
-            val muscleCondition =
-                muscles.isEmpty() || muscles.any { it.lowercase() in muscleGroups }
-
-            val equipmentCondition =
-                equipment.isEmpty() || equipment.contains(exercise.equipment.orEmpty())
-
+            val muscleGroups = (exercise.primaryMuscles + exercise.secondaryMuscles).map { it.lowercase() }
+            val muscleCondition = muscles.isEmpty() || muscles.any { it.lowercase() in muscleGroups }
+            val equipmentCondition = equipment.isEmpty() || equipment.contains(exercise.equipment.orEmpty())
             val selectedCondition = !selActive || selected.contains(exercise)
             val usedCondition = !usedActive || useIDs.contains(exercise.id)
-            val searchCondition =
-                query.isBlank() || exercise.name.contains(query, ignoreCase = true)
-
+            val searchCondition = query.isBlank() || exercise.name.contains(query, ignoreCase = true)
             muscleCondition && equipmentCondition && selectedCondition && usedCondition && searchCondition
         }.sortedBy { exercise ->
-            if (query.isNotBlank()) {
-                exercise.name.length
-            } else {
-                exercise.name.firstOrNull()?.code ?: 0
-            }
+            if (query.isNotBlank()) exercise.name.length else exercise.name.firstOrNull()?.code ?: 0
+        }
+    }
+
+    fun changeLanguage(lang: String) {
+        viewModelScope.launch {
+            repo.switchLanguage(lang)
         }
     }
 
@@ -94,7 +87,6 @@ class ExerciseViewModel @Inject constructor(
     val uiEvent = _uiEvent.receiveAsFlow()
 
     init {
-        // Cargar lista de equipos desde la DB
         viewModelScope.launch {
             repo.getAllMuscles().collect { musclesList ->
                 _allMuscles.value = musclesList
@@ -112,6 +104,7 @@ class ExerciseViewModel @Inject constructor(
         }
     }
 
+
     fun onEvent(event: Event) {
         when (event) {
             is ExerciseEvent.OpenGuide -> openGuide(event.exercise)
@@ -121,7 +114,6 @@ class ExerciseViewModel @Inject constructor(
                     else add(event.exercise)
                 }
             }
-
             is ExerciseEvent.FilterSelected -> _filterSelected.value = !_filterSelected.value
             is ExerciseEvent.FilterUsed -> _filterUsed.value = !_filterUsed.value
             is ExerciseEvent.SelectMuscle -> {
@@ -129,14 +121,12 @@ class ExerciseViewModel @Inject constructor(
                     if (contains(event.muscle)) remove(event.muscle) else add(event.muscle)
                 }
             }
-
             is ExerciseEvent.DeselectMuscles -> _muscleFilter.value = emptyList()
             is ExerciseEvent.SelectEquipment -> {
                 _equipmentFilter.value = _equipmentFilter.value.toMutableList().apply {
                     if (contains(event.equipment)) remove(event.equipment) else add(event.equipment)
                 }
             }
-
             is ExerciseEvent.DeselectEquipment -> _equipmentFilter.value = emptyList()
             is ExerciseEvent.AddExercises -> {
                 viewModelScope.launch {
@@ -152,7 +142,6 @@ class ExerciseViewModel @Inject constructor(
                     }
                 }
             }
-
             is ExerciseEvent.OpenStats -> openStats(event.exercise)
             is ExerciseEvent.SearchChanged -> _searchText.value = event.text
         }
@@ -173,7 +162,6 @@ class ExerciseViewModel @Inject constructor(
                     StatEntry(date = sessionStart, pesoMax = set.weight ?: 0f)
                 }.sortedBy { it.date }
             }
-
             _uiEvent.send(UiEvent.ShowStatsPopup(stats))
         }
     }

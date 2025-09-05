@@ -11,10 +11,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.exerlog.db.entities.Exercise
 import com.example.exerlog.ui.exercisepicker.components.EquipmentSheet
 import com.example.exerlog.ui.exercisepicker.components.ExercisePickerPreview
 import com.example.exerlog.ui.exercisepicker.components.ImagePopup
@@ -27,18 +28,30 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExercisePicker(
-    navController: NavController, viewModel: ExerciseViewModel = hiltViewModel()
+    navController: NavController,
+    viewModel: ExerciseViewModel = hiltViewModel()
 ) {
+
+    val configuration = LocalConfiguration.current
+    val currentDeviceLang = configuration.locales[0].language.let { lang ->
+        if (lang in listOf("en", "es")) lang else "en"
+    }
+
+    LaunchedEffect(currentDeviceLang) {
+        viewModel.changeLanguage(currentDeviceLang)
+    }
+
+
+    // Estados de UI
     val exercises by viewModel.filteredExercises.collectAsState(initial = emptyList())
     val selectedExercises by viewModel.selectedExercises.collectAsState()
     val searchText by viewModel.searchText.collectAsState()
     val equipmentFilter by viewModel.equipmentFilter.collectAsState()
     val muscleFilter by viewModel.muscleFilter.collectAsState()
-    val context = LocalContext.current
-
-    val allEquipment by viewModel._allEquipment.collectAsState() // <- lista completa desde DB
-    val allMusclesList by viewModel._allMuscles.collectAsState() // <- lista completa desde DB
-
+    val allEquipment by viewModel._allEquipment.collectAsState()
+    val allMusclesList by viewModel._allMuscles.collectAsState()
+    val filterSelected by viewModel.filterSelected.collectAsState()
+    val filterUsed by viewModel.filterUsed.collectAsState()
 
     val keyboardController = LocalSoftwareKeyboardController.current
     val coroutineScope = rememberCoroutineScope()
@@ -46,11 +59,16 @@ fun ExercisePicker(
     var equipmentBottomsheet by remember { mutableStateOf(false) }
     var showPopupExerciseId by remember { mutableStateOf<String?>(null) }
     var statsPopupSets by remember { mutableStateOf<List<StatEntry>?>(null) }
+
+    // Popups
     statsPopupSets?.let { stats ->
         StatsPopup(
-            stats = stats, onDismiss = { statsPopupSets = null })
+            stats = stats,
+            onDismiss = { statsPopupSets = null }
+        )
     }
 
+    // Observamos eventos de UI
     LaunchedEffect(true) {
         viewModel.uiEvent.collect { event ->
             when (event) {
@@ -60,7 +78,7 @@ fun ExercisePicker(
                 }
 
                 is UiEvent.ShowStatsPopup -> {
-                    statsPopupSets = event.stats // ahora statsPopupSets es List<StatEntry>
+                    statsPopupSets = event.stats
                     keyboardController?.hide()
                 }
 
@@ -68,8 +86,6 @@ fun ExercisePicker(
             }
         }
     }
-    val filterSelected by viewModel.filterSelected.collectAsState()
-    val filterUsed by viewModel.filterUsed.collectAsState()
 
     // Contenido principal
     ExercisePickerPreview(
@@ -112,19 +128,20 @@ fun ExercisePicker(
         ModalBottomSheet(
             onDismissRequest = {
                 coroutineScope.launch { sheetState.hide() }
-            }, sheetState = sheetState
+            },
+            sheetState = sheetState
         ) {
             if (equipmentBottomsheet) {
                 EquipmentSheet(
                     selectedEquipment = equipmentFilter,
-                    allEquipment = allEquipment, // <- usamos los datos de la DB
+                    allEquipment = allEquipment,
                     onEvent = viewModel::onEvent
                 )
             } else {
                 MuscleSheet(
                     selectedMusclegroups = muscleFilter,
                     allMuscleGroups = allMusclesList,
-                    onEvent = viewModel::onEvent,
+                    onEvent = viewModel::onEvent
                 )
             }
         }
@@ -132,10 +149,12 @@ fun ExercisePicker(
 
     // Popup de imagen del ejercicio
     if (showPopupExerciseId != null) {
-        val exercise = exercises.find { it.id == showPopupExerciseId }
+        val exercise: Exercise? = exercises.find { it.id == showPopupExerciseId }
         if (exercise != null) {
             ImagePopup(
-                exercise = exercise, onDismiss = { showPopupExerciseId = null })
+                exercise = exercise,
+                onDismiss = { showPopupExerciseId = null }
+            )
         }
     }
 }

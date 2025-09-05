@@ -7,6 +7,7 @@ import com.example.exerlog.db.entities.SessionExercise
 import com.example.exerlog.db.entities.SessionExerciseWithExercise
 import com.example.exerlog.ui.DatabaseModel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 
 interface ExerRepository {
     fun getSessionById(sessionId: Long): Session
@@ -36,4 +37,8 @@ interface ExerRepository {
     fun getAllMuscles(): Flow<List<String>>
     fun getUsedExerciseIds(): Flow<List<String>>
     fun getSessionExerciseById(id: Long): SessionExercise
+
+    val currentLanguage: Flow<String> // <-- expone idioma actual
+    fun getExercisesFlow(): Flow<List<Exercise>>
+    suspend fun switchLanguage(lang: String)
 }

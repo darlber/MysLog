@@ -6,8 +6,6 @@ import androidx.core.content.edit
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.exerlog.core.Constants
-import com.example.exerlog.core.Constants.Companion.BASE_IMAGE_URL
-import com.example.exerlog.core.Constants.Companion.CACHE_FILENAME
 import com.example.exerlog.core.Constants.Companion.VERSION_KEY
 import com.example.exerlog.db.entities.ExercisesVersion
 import com.example.exerlog.db.repository.ExerRepository
@@ -31,7 +29,7 @@ class PopulateDatabaseCallback @Inject constructor(
     private val exerciseDaoProvider: Provider<ExerDAO>
 ) : RoomDatabase.Callback() {
 
-    private val supportedLanguages = listOf("en", "es") // agregar más si quieres
+    private val supportedLanguages = listOf("en", "es")
 
     override fun onCreate(db: SupportSQLiteDatabase) {
         super.onCreate(db)
@@ -48,8 +46,7 @@ class PopulateDatabaseCallback @Inject constructor(
         }
     }
 
-    /** Descarga todos los JSON soportados al instalar la app */
-    private suspend fun prefetchAllLanguages() {
+    suspend fun prefetchAllLanguages() {
         supportedLanguages.forEach { lang ->
             val jsonUrl = Constants.getJsonUrlForLanguage(lang)
             val jsonString = downloadJsonFromGitHub(jsonUrl) ?: return@forEach
@@ -59,13 +56,11 @@ class PopulateDatabaseCallback @Inject constructor(
         }
     }
 
-    /** Obtiene el idioma actual del dispositivo o app */
-    private fun getCurrentLanguage(): String {
-        val locale = context.resources.configuration.locales.get(0)
+    fun getCurrentLanguage(): String {
+        val locale = context.resources.configuration.locales[0]
         return if (supportedLanguages.contains(locale.language)) locale.language else "en"
     }
 
-    /** Chequea la DB y repopula solo si hay nueva versión */
     suspend fun checkAndPopulateDatabase(lang: String) {
         Timber.i("checkAndPopulateDatabase: Started for language $lang")
         val jsonFile = File(context.filesDir, "exercises_$lang.json")
@@ -77,7 +72,7 @@ class PopulateDatabaseCallback @Inject constructor(
                 withContext(Dispatchers.Main) {
                     Toast.makeText(context, "No JSON disponible para $lang", Toast.LENGTH_SHORT).show()
                 }
-                Timber.w("No JSON available, aborting prepopulation for $lang")
+                Timber.w("No JSON disponible, abortando populate para $lang")
                 return
             }
         }
@@ -89,14 +84,12 @@ class PopulateDatabaseCallback @Inject constructor(
         val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         val localVersion = prefs.getInt("${VERSION_KEY}_$lang", 0)
 
-        if (exercisesVersion.version > localVersion) {
-            Timber.i("Updating database for $lang from version $localVersion to ${exercisesVersion.version}")
-            exerciseDaoProvider.get().insertAll(exercises)
-            prefs.edit { putInt("${VERSION_KEY}_$lang", exercisesVersion.version) }
-            Timber.i("${exercises.size} exercises inserted successfully for $lang")
-        } else {
-            Timber.d("Database already up-to-date for $lang. Version: $localVersion")
-        }
+        // Forzamos siempre la actualización en runtime
+        Timber.i("Updating database for $lang from version $localVersion to ${exercisesVersion.version}")
+        exerciseDaoProvider.get().clearExercises()
+        exerciseDaoProvider.get().insertAll(exercises)
+        prefs.edit { putInt("${VERSION_KEY}_$lang", exercisesVersion.version) }
+        Timber.i("${exercises.size} exercises insertados correctamente para $lang")
     }
 
     private fun downloadJsonFromGitHub(url: String): String? {
@@ -112,7 +105,7 @@ class PopulateDatabaseCallback @Inject constructor(
                 null
             }
         } catch (e: Exception) {
-            Timber.e(e, "Error downloading JSON from GitHub: $url")
+            Timber.e(e, "Error descargando JSON desde GitHub: $url")
             null
         }
     }
