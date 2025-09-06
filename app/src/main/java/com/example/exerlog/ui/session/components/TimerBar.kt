@@ -3,7 +3,11 @@ package com.example.exerlog.ui.session.components
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
@@ -12,7 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -21,86 +24,91 @@ import androidx.compose.ui.unit.dp
 import com.example.exerlog.ui.TimerState
 import com.example.exerlog.ui.session.SessionEvent
 import com.example.exerlog.utils.Event
-import com.example.exerlog.utils.toTimerString
 
+// Función de extensión para formatear tiempo en mm:ss
+fun Long.toTimerString(): String {
+    val totalSeconds = (this / 1000).toInt()
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return "%d:%02d".format(minutes, seconds)
+}
 
 @Composable
 fun TimerBar(
-  timerState: TimerState,
-  onEvent: (Event) -> Unit
+    timerState: TimerState,
+    onEvent: (Event) -> Unit
 ) {
     val windowInfo = LocalWindowInfo.current
     val maxWidthDp: Dp = windowInfo.containerSize.width.dp
     val timerWidth = maxWidthDp * (timerState.time.toFloat() / timerState.maxTime)
 
     val timerToggleIcon = if (timerState.running) Icons.Default.Pause else Icons.Default.PlayArrow
-    val timerTimeText = if (timerState.time > 0L) timerState.time.toTimerString() else timerState.maxTime.toTimerString()
+    val timerTimeText =
+        if (timerState.time > 0L) timerState.time.toTimerString() else timerState.maxTime.toTimerString()
 
-    timerState.time
-  val timerRunning = timerState.running
-    timerState.maxTime
+    val timerRunning = timerState.running
 
-  val timerTonalElevation by animateDpAsState(targetValue = if (timerRunning) 140.dp else 14.dp)
+    val timerTonalElevation by animateDpAsState(targetValue = if (timerRunning) 140.dp else 14.dp)
 
-  Surface(
-    modifier = Modifier
-      .fillMaxWidth()
-      .height(50.dp),
-    tonalElevation = 8.dp
-  ) {
-    Box {
-      Surface(
+    Surface(
         modifier = Modifier
-          .width(timerWidth)
-          .height(50.dp),
-        tonalElevation = timerTonalElevation
-      ) {}
-      Row(
-        modifier = Modifier
-          .fillMaxSize()
-          .padding(horizontal = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-      ) {
-        Row(
-          verticalAlignment = Alignment.CenterVertically
-        ) {
-          IconButton(onClick = { onEvent(SessionEvent.TimerDecreased) }) {
-            Icon(Icons.Default.Remove, "Decrease time")
-          }
-          Text(
-            text = timerTimeText,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.width(50.dp)
-          )
-          IconButton(onClick = { onEvent(SessionEvent.TimerIncreased) }) {
-            Icon(Icons.Default.Add, "Increase time")
-          }
+            .fillMaxWidth()
+            .height(50.dp),
+        tonalElevation = 8.dp
+    ) {
+        Box {
+            Surface(
+                modifier = Modifier
+                    .width(timerWidth)
+                    .height(50.dp),
+                tonalElevation = timerTonalElevation
+            ) {}
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = { onEvent(SessionEvent.TimerDecreased) }) {
+                        Icon(Icons.Default.Remove, "Decrease time")
+                    }
+                    Text(
+                        text = timerTimeText,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.width(50.dp)
+                    )
+                    IconButton(onClick = { onEvent(SessionEvent.TimerIncreased) }) {
+                        Icon(Icons.Default.Add, "Increase time")
+                    }
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = { onEvent(SessionEvent.TimerReset) }) {
+                        Icon(Icons.Default.Refresh, "Reset Timer")
+                    }
+                    IconButton(onClick = { onEvent(SessionEvent.TimerToggled) }) {
+                        Icon(timerToggleIcon, "Toggle Timer")
+                    }
+                }
+            }
         }
-        Row(
-          verticalAlignment = Alignment.CenterVertically
-        ) {
-          IconButton(onClick = { onEvent(SessionEvent.TimerReset) }) {
-            Icon(Icons.Default.Refresh, "Reset Timer")
-          }
-          IconButton(onClick = { onEvent(SessionEvent.TimerToggled) }) {
-            Icon(timerToggleIcon, "Toggle Timer")
-          }
-        }
-      }
     }
-  }
 }
 
 @Preview
 @Composable
 fun TimerBarPreview() {
-  TimerBar(
-    timerState = TimerState(
-      time = 60000L,
-      maxTime = 120000L,
-      running = false
-    ),
-    onEvent = {}
-  )
+    TimerBar(
+        timerState = TimerState(
+            time = 60000L,
+            maxTime = 120000L,
+            running = false
+        ),
+        onEvent = {}
+    )
 }

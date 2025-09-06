@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -24,11 +25,11 @@ fun HomeBottomBar(
         actions = {
             Row {
                 FloatingActionButton(
-                    onClick = { onEvent(HomeEvent.OpenSettings) },
+                    onClick = { onEvent(HomeEvent.CheckUpdates) },
                     modifier = Modifier.size(48.dp),
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 ) {
-                    Icon(Icons.Filled.MoreVert, contentDescription = "Options")
+                    Icon(Icons.Filled.Refresh, contentDescription = "Update")
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 FloatingActionButton(

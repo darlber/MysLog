@@ -1,7 +1,6 @@
 package com.example.exerlog.ui.session.actions
 
 import androidx.compose.animation.animateColor
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -32,9 +31,7 @@ fun TimerAction(
     )
   )
 
-  IconButton(onClick = {
-    onClick()
-  }) {
+  IconButton(onClick = onClick) {
     Icon(
       imageVector = Icons.Outlined.Timer,
       contentDescription = "Timer",

@@ -69,12 +69,14 @@ fun SettingsScreen(
             FilledTonalButton(onClick = {
                 viewModel.onEvent(SettingsEvent.CreateFile)
             }) {
-                Text("Export Database")
+                //TODO
+                Text("TODO: Export Database")
             }
             FilledTonalButton(onClick = {
                 importLauncher.launch("application/json")
             }) {
-                Text("Import Database")
+                //TODO
+                Text("TODO: Import Database")
             }
             FilledTonalButton(onClick = {
                 viewModel.onEvent(SettingsEvent.ClearDatabase)

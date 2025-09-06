@@ -37,7 +37,7 @@ interface ExerRepository {
     fun getAllMuscles(): Flow<List<String>>
     fun getUsedExerciseIds(): Flow<List<String>>
     fun getSessionExerciseById(id: Long): SessionExercise
-
+    suspend fun checkForUpdates(lang: String = "es"): Boolean
     val currentLanguage: Flow<String> // <-- expone idioma actual
     fun getExercisesFlow(): Flow<List<Exercise>>
     suspend fun switchLanguage(lang: String)

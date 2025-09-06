@@ -93,6 +93,7 @@ fun SessionScreen(
                 is UiEvent.FileCreated -> TODO()
                 is UiEvent.ShowImagePopup -> TODO()
                 is UiEvent.ShowStatsPopup -> TODO()
+                is UiEvent.ShowSnackbar -> Timber.d("Snackbar requested with message: ${event.message}")
             }
         }
     }

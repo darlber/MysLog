@@ -55,9 +55,7 @@ fun SessionBottomBar(
                     // Botón de eliminar sesión
                     FloatingActionButton(
                         onClick = onDeleteSession,
-                        modifier = Modifier
-                            .width(48.dp)
-                            .height(48.dp),
+                        modifier = Modifier.size(48.dp),
                         containerColor = MaterialTheme.colorScheme.primaryContainer
                     ) {
                         Icon(Icons.Outlined.Delete, contentDescription = "Delete Session")
@@ -65,12 +63,10 @@ fun SessionBottomBar(
 
                     Spacer(modifier = Modifier.width(12.dp))
 
-                    // Botón de terminar sesión (más ancho)
+                    // Botón de terminar sesión
                     FloatingActionButton(
                         onClick = onFinishSession,
-                        modifier = Modifier
-                            .width(80.dp)
-                            .height(48.dp),
+                        modifier = Modifier.width(80.dp).height(48.dp),
                         containerColor = MaterialTheme.colorScheme.secondaryContainer
                     ) {
                         Text("Finish")
@@ -79,22 +75,13 @@ fun SessionBottomBar(
                     Spacer(modifier = Modifier.width(12.dp))
 
                     // Botón de temporizador
-// Botón de temporizador
                     FloatingActionButton(
-                        onClick = {
-                            onTimerPress() // alterna visibilidad
-
-                        },
-                        modifier = Modifier
-                            .width(48.dp)
-                            .height(48.dp),
+                        onClick = onTimerPress,
+                        modifier = Modifier.size(48.dp),
                         containerColor = MaterialTheme.colorScheme.primaryContainer
                     ) {
                         TimerAction(
-                            onClick = {
-                                onTimerPress()
-
-                            },
+                            onClick = onTimerPress,
                             timerState = timerState,
                             timerVisible = timerVisible
                         )
@@ -106,10 +93,7 @@ fun SessionBottomBar(
                     onClick = onFAB,
                     containerColor = MaterialTheme.colorScheme.primary
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.Add,
-                        contentDescription = "Add Exercise"
-                    )
+                    Icon(imageVector = Icons.Filled.Add, contentDescription = "Add Exercise")
                 }
             }
         )

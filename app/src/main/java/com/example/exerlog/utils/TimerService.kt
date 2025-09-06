@@ -29,7 +29,6 @@ class TimerService : Service() {
 
   private lateinit var notificationManager: NotificationManager
 
-  // Vibrator
   private val vibrator: Vibrator by lazy {
     getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
   }
@@ -78,12 +77,14 @@ class TimerService : Service() {
     Timber.d("maxTime: $maxTime")
     timer = WorkoutTimer(maxTime).apply { start() }
     sendStatus()
+    toForeground() // aseguramos foreground si es necesario
   }
 
   private fun stop() {
     timer?.cancel()
     running = false
     sendStatus()
+    toBackground()
   }
 
   private fun resume() {
@@ -92,29 +93,27 @@ class TimerService : Service() {
     timer?.start()
     running = true
     sendStatus()
+    toForeground()
   }
 
   private fun increment() {
-    if (running) {
+    maxTime += increment
+    if (!running) {
+      time += increment
+    } else {
       stop()
-      maxTime += increment
       time += increment
       resume()
-    } else {
-      maxTime += increment
-      if (time > 0L) time += increment
     }
     sendStatus()
   }
 
   private fun decrement() {
+    time = (time - increment).coerceAtLeast(0L)
+    maxTime = (maxTime - increment).coerceAtLeast(0L)
     if (running) {
       stop()
-      time = time.minus(increment).coerceAtLeast(0L)
-      if (time <= 0L) reset() else resume()
-    } else {
-      maxTime = maxTime.minus(increment).coerceAtLeast(0L)
-      time = time.minus(increment).coerceAtLeast(0L)
+      if (time > 0L) resume()
     }
     sendStatus()
   }
@@ -125,6 +124,7 @@ class TimerService : Service() {
     time = 0L
     running = false
     sendStatus()
+    toBackground()
   }
 
   private fun sendStatus() {
@@ -205,7 +205,6 @@ class TimerService : Service() {
     override fun onTick(millisUntilFinished: Long) {
       time = millisUntilFinished
       if (showNotification) notify(buildStatusNotification())
-      if (time <= 0L) onFinish()
       sendStatus()
     }
 
@@ -213,7 +212,6 @@ class TimerService : Service() {
       Timber.d("Timer finished")
       time = maxTime
 
-      // Vibrar una vez cuando termina
       if (vibrator.hasVibrator()) {
         vibrator.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
       }
@@ -230,10 +228,10 @@ class TimerService : Service() {
 }
 
 fun Long.toTimerString(): String {
-  val totalSeconds = this.toFloat().div(1000).roundToInt()
+  val totalSeconds = (this / 1000).toInt()
   val minutes = totalSeconds / 60
   val seconds = totalSeconds % 60
-  val displayedSeconds = if (seconds < 10) "0$seconds" else seconds
+  val displayedSeconds = if (seconds < 10) "0$seconds" else "$seconds"
   return "$minutes:$displayedSeconds"
 }
 

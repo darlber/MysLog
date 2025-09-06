@@ -17,5 +17,7 @@ sealed class UiEvent {
     object IncrementTimer: UiEvent()
     object DecrementTimer : UiEvent()
     data class ShowFinishResult(val result: FinishResult) : UiEvent()
+    data class ShowSnackbar(val message: String) : UiEvent() // 👈 Nuevo evento
+
 
 }

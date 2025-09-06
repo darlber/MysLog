@@ -2,21 +2,23 @@ package com.example.exerlog.db.repository
 
 import android.content.Context
 import androidx.core.content.edit
+import com.example.exerlog.core.Constants
 import com.example.exerlog.core.Constants.Companion.VERSION_KEY
 import com.example.exerlog.db.ExerDAO
 import com.example.exerlog.db.GymDatabase
 import com.example.exerlog.db.PopulateDatabaseCallback
 import com.example.exerlog.db.entities.Exercise
+import com.example.exerlog.db.entities.ExercisesVersion
 import com.example.exerlog.db.entities.GymSet
 import com.example.exerlog.db.entities.Session
 import com.example.exerlog.db.entities.SessionExercise
 import com.example.exerlog.db.entities.SessionExerciseWithExercise
 import com.example.exerlog.ui.DatabaseModel
+import com.google.gson.Gson
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.mapNotNull
 import timber.log.Timber
@@ -30,8 +32,23 @@ class ExerRepositoryImpl @Inject constructor(
     private val populateDatabaseCallback: PopulateDatabaseCallback,
     @ApplicationContext private val context: Context
 ) : ExerRepository {
+    override suspend fun checkForUpdates(lang: String): Boolean {
+        val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val localVersion = prefs.getFloat("${Constants.VERSION_KEY}_$lang", 0F)
 
+        val remoteUrl = Constants.getJsonUrlForLanguage(lang)
+        val remoteJson = populateDatabaseCallback.downloadJsonFromGitHub(remoteUrl) ?: return false
 
+        val exercisesVersion = Gson().fromJson(remoteJson, ExercisesVersion::class.java)
+        val remoteVersion = exercisesVersion.version
+
+        return if (remoteVersion > localVersion) {
+            populateDatabaseCallback.populateFromJson(remoteJson, lang, localVersion, prefs, force = true)
+            true
+        } else {
+            false
+        }
+    }
     private val _currentLanguage = MutableStateFlow(populateDatabaseCallback.getCurrentLanguage())
     override val currentLanguage: Flow<String> = _currentLanguage
 

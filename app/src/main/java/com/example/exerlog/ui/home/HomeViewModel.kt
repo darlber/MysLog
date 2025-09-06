@@ -26,28 +26,22 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val repo: ExerRepository
-
 ) : ViewModel() {
 
-    // Combine sesiones y ejercicios de la sesión para generar SessionWrapper con músculos ordenados
     val sessions = combine(
         repo.getAllSessionExercises(), repo.getAllSessions()
     ) { sewes, sessions ->
 
         sessions.map { session ->
-            // Filtra SessionExerciseWithExercise que pertenecen a la sesión actual
             val relatedExercises =
                 sewes.filter { it.sessionExercise.parentSessionId == session.sessionId }
                     .map { it.exercise }
 
-            // Ahora, usando tu función para sacar músculos ordenados
             val muscleGroups = relatedExercises.sortedListOfMuscleGroups()
-
             SessionWrapper(session, muscleGroups)
         }
     }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    // Canal para eventos UI
     private val _uiEvent = Channel<UiEvent>()
     val uiEvent = _uiEvent.receiveAsFlow()
     var sessionToDelete by mutableStateOf<SessionWrapper?>(null)
@@ -85,7 +79,20 @@ class HomeViewModel @Inject constructor(
                     }
                 }
             }
+
+            is HomeEvent.CheckUpdates -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    val updated = repo.checkForUpdates()
+                    val message = if (updated) "Base de datos actualizada" else "Ya está al día"
+                    sendUiEvent(UiEvent.ShowSnackbar(message))
+                }
+            }
         }
+    }
+    suspend fun checkForUpdatesSuspend(lang: String = "es"): Boolean {
+        val result = repo.checkForUpdates(lang)
+        Timber.d("checkForUpdatesSuspend returned $result for lang=$lang")
+        return result
     }
 
     private fun sendUiEvent(event: UiEvent) {
