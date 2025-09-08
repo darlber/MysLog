@@ -33,6 +33,7 @@
     import kotlinx.coroutines.launch
     import kotlinx.coroutines.withContext
     import timber.log.Timber
+    import java.util.Locale
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
@@ -81,15 +82,19 @@
                     when (event) {
                         HomeEvent.CheckUpdates -> {
                             coroutineScope.launch(Dispatchers.IO) {
-                                Timber.d("Iniciando checkForUpdates…")
-                                val hasUpdates = viewModel.checkForUpdatesSuspend()
+                                val lang = Locale.getDefault().language // Detecta idioma del sistema
+                                Timber.d("Idioma actual del sistema: $lang")
+
+                                val hasUpdates = viewModel.checkForUpdatesSuspend(lang)
                                 Timber.d("Resultado checkForUpdates: $hasUpdates")
+
                                 withContext(Dispatchers.Main) {
-                                    if (hasUpdates) {
-                                        snackbarHostState.showSnackbar("✅ Base de datos actualizada correctamente")
+                                    val msg = if (hasUpdates) {
+                                        "✅ Base de datos actualizada correctamente ($lang)"
                                     } else {
-                                        snackbarHostState.showSnackbar("La base de datos ya estaba actualizada ✅")
+                                        "La base de datos ya estaba actualizada ✅ ($lang)"
                                     }
+                                    snackbarHostState.showSnackbar(msg)
                                 }
                             }
                         }

@@ -4,12 +4,17 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.myslog.core.Constants
 import com.example.myslog.core.Constants.Companion.VERSION_KEY
 import com.example.myslog.db.entities.ExercisesVersion
+import com.example.myslog.db.entities.Exercise
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import timber.log.Timber
@@ -29,8 +34,27 @@ class PopulateDatabaseCallback @Inject constructor(
         return if (supportedLanguages.contains(locale.language)) locale.language else "en"
     }
 
+    override fun onCreate(db: SupportSQLiteDatabase) {
+        super.onCreate(db)
+        Timber.i("Room onCreate callback ejecutado")
+        CoroutineScope(Dispatchers.IO).launch {
+            val lang = getCurrentLanguage()
+            checkAndPopulateDatabase(lang)
+        }
+    }
+
+    override fun onOpen(db: SupportSQLiteDatabase) {
+        super.onOpen(db)
+        Timber.d("Room onOpen callback ejecutado")
+        // Opcional: actualizar ejercicios al abrir
+        CoroutineScope(Dispatchers.IO).launch {
+            val lang = getCurrentLanguage()
+            checkAndPopulateDatabase(lang)
+        }
+    }
+
     suspend fun checkAndPopulateDatabase(lang: String) {
-        Timber.i("checkAndPopulateDatabase: Started for language $lang")
+        Timber.i("checkAndPopulateDatabase: iniciando para idioma $lang")
 
         val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         val localVersion = prefs.getFloat("${VERSION_KEY}_$lang", 0F)
@@ -43,7 +67,7 @@ class PopulateDatabaseCallback @Inject constructor(
             Timber.d("Usando JSON cacheado para $lang")
         }
 
-        // Obtener versión remota SIN guardar todavía
+        // Descargar JSON remoto
         val remoteUrl = Constants.getJsonUrlForLanguage(lang)
         val remoteJson = downloadJsonFromGitHub(remoteUrl)
 
@@ -52,7 +76,7 @@ class PopulateDatabaseCallback @Inject constructor(
                 Timber.d("No se pudo descargar remoto, usando cache local")
                 populateFromJson(localJson, lang, localVersion, prefs, force = false)
             } else {
-                Timber.w("No JSON disponible en remoto ni en cache, abortando populate para $lang")
+                Timber.w("No hay JSON disponible ni en remoto ni en cache, abortando populate para $lang")
             }
             return
         }
@@ -62,18 +86,21 @@ class PopulateDatabaseCallback @Inject constructor(
         val remoteVersion = remoteExercisesVersion.version
 
         if (remoteVersion > localVersion) {
-            // Guardamos en cache y actualizamos
             cacheFile.writeText(remoteJson)
-            Timber.i("Actualizando BD para $lang de versión $localVersion a $remoteVersion")
+            Timber.i("Actualizando BD $lang de versión $localVersion a $remoteVersion")
             populateFromJson(remoteJson, lang, localVersion, prefs, force = true)
         } else {
-            Timber.i("Base de datos ya está actualizada para $lang (v$localVersion)")
+            Timber.i("BD ya actualizada para $lang (v$localVersion)")
             if (localJson != null) {
                 populateFromJson(localJson, lang, localVersion, prefs, force = false)
             }
         }
     }
 
+    /**
+     * Inserta ejercicios en la BD.
+     * Mantiene IDs iguales para no perder datos del usuario.
+     */
     suspend fun populateFromJson(
         json: String,
         lang: String,
@@ -86,10 +113,10 @@ class PopulateDatabaseCallback @Inject constructor(
         val exercises = exercisesVersion.exercises
 
         if (force || exercisesVersion.version > localVersion) {
-            exerciseDaoProvider.get().clearExercises()
+            Timber.i("Insertando ${exercises.size} ejercicios para $lang")
             exerciseDaoProvider.get().insertAll(exercises)
             prefs.edit { putFloat("${VERSION_KEY}_$lang", exercisesVersion.version.toFloat()) }
-            Timber.i("${exercises.size} ejercicios insertados para $lang")
+            Timber.i("Insertados todos los ejercicios para $lang")
         }
     }
 
@@ -102,11 +129,11 @@ class PopulateDatabaseCallback @Inject constructor(
                 Timber.d("JSON descargado desde GitHub: $url")
                 response.body?.string()
             } else {
-                Timber.w("Failed to download JSON, HTTP ${response.code}")
+                Timber.w("Error descargando JSON, HTTP ${response.code}")
                 null
             }
         } catch (e: Exception) {
-            Timber.e(e, "Error descargando JSON desde GitHub: $url")
+            Timber.e(e, "Excepción descargando JSON desde GitHub: $url")
             null
         }
     }

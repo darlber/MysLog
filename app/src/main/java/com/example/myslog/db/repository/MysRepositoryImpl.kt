@@ -16,11 +16,13 @@ import com.example.myslog.db.entities.SessionExerciseWithExercise
 import com.example.myslog.ui.DatabaseModel
 import com.google.gson.Gson
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -32,9 +34,16 @@ class MysRepositoryImpl @Inject constructor(
     private val populateDatabaseCallback: PopulateDatabaseCallback,
     @ApplicationContext private val context: Context
 ) : MysRepository {
+
+    private val _currentLanguage = MutableStateFlow(populateDatabaseCallback.getCurrentLanguage())
+    override val currentLanguage: Flow<String> = _currentLanguage
+
+    override fun getExercisesFlow(): Flow<List<Exercise>> =
+        _currentLanguage.flatMapLatest { dao.getAllExercises() }
+
     override suspend fun checkForUpdates(lang: String): Boolean {
         val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        val localVersion = prefs.getFloat("${Constants.VERSION_KEY}_$lang", 0F)
+        val localVersion = prefs.getFloat("${VERSION_KEY}_$lang", 0F)
 
         val remoteUrl = Constants.getJsonUrlForLanguage(lang)
         val remoteJson = populateDatabaseCallback.downloadJsonFromGitHub(remoteUrl) ?: return false
@@ -46,78 +55,77 @@ class MysRepositoryImpl @Inject constructor(
             populateDatabaseCallback.populateFromJson(remoteJson, lang, localVersion, prefs, force = true)
             true
         } else {
+            Timber.i("BD ya actualizada para $lang (v$localVersion)")
             false
         }
     }
-    private val _currentLanguage = MutableStateFlow(populateDatabaseCallback.getCurrentLanguage())
-    override val currentLanguage: Flow<String> = _currentLanguage
-
-    override fun getExercisesFlow(): Flow<List<Exercise>> =
-        _currentLanguage.flatMapLatest { dao.getAllExercises() }
 
     override suspend fun switchLanguage(lang: String) {
-        if (lang != _currentLanguage.value) {
-            Timber.i("Switching exercises to language: $lang")
-            populateDatabaseCallback.checkAndPopulateDatabase(lang)
+        withContext(Dispatchers.IO) {
+            // Guardar idioma en preferencias
+            val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+            prefs.edit().putString("current_lang", lang).apply()
             _currentLanguage.value = lang
-            Timber.i("Language switch to $lang completed")
+
+            // Limpiar la DB
+            clearDatabaseInternal()
+
+            // Descargar JSON y poblar DB
+            val remoteUrl = Constants.getJsonUrlForLanguage(lang)
+            val remoteJson = populateDatabaseCallback.downloadJsonFromGitHub(remoteUrl)
+                ?: return@withContext
+
+            populateDatabaseCallback.populateFromJson(remoteJson, lang, 0F, prefs, force = true)
+        }
+    }
+
+    private suspend fun clearDatabaseInternal() {
+        withContext(Dispatchers.IO) {
+            Timber.i("Clearing database")
+            db.clearAllTables()
+            dao.deletePrimaryKeyIndex()
+            val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+            prefs.edit { putInt(VERSION_KEY, 0) }
+        }
+    }
+
+    override suspend fun clearDatabase() {
+        withContext(Dispatchers.IO) {
+            clearDatabaseInternal()
+            populateDatabaseCallback.checkAndPopulateDatabase(_currentLanguage.value)
         }
     }
 
     override fun getSessionById(sessionId: Long) = dao.getSessionById(sessionId)
-
     override fun getAllSessions() = dao.getAllSessions()
-
     override fun getAllSets() = dao.getAllSets()
-
     override fun getAllExercises() = dao.getAllExercises()
-
     override fun getLastSession() = dao.getLastSession()
-
     override fun getAllSessionExercises() = dao.getAllSessionExercises()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getExercisesForSession(session: Flow<Session>) =
         session.flatMapLatest { dao.getExercisesForSession(it.sessionId) }
 
-    override fun getExercisesForSession(session: Session): Flow<List<SessionExerciseWithExercise>> {
-        Timber.d("Retrieving exercises for session: $session")
-        return dao.getExercisesForSession(session.sessionId)
-    }
+    override fun getExercisesForSession(session: Session): Flow<List<SessionExerciseWithExercise>> =
+        dao.getExercisesForSession(session.sessionId)
 
     override fun getSetsForExercise(sessionExerciseId: Long) = dao.getSetsForExercise(sessionExerciseId)
 
-    override fun getMuscleGroupsForSession(session: Session): Flow<List<String>> {
-        return dao.getMuscleGroupsForSession(session.sessionId).mapNotNull {
-            try {
-                emptyList()
-            } catch (_: Exception) {
-                Timber.d("Error when converting target.")
-                emptyList()
-            }
+    override fun getMuscleGroupsForSession(session: Session): Flow<List<String>> =
+        dao.getMuscleGroupsForSession(session.sessionId).mapNotNull {
+            try { emptyList() } catch (_: Exception) { Timber.d("Error target"); emptyList() }
         }
-    }
 
     override suspend fun insertExercise(exercise: Exercise) = dao.insertExercise(exercise)
-
     override suspend fun insertSession(session: Session) = dao.insertSession(session)
-
     override suspend fun removeSession(session: Session) = dao.removeSession(session)
-
     override suspend fun updateSession(session: Session) = dao.updateSession(session)
-
-    override suspend fun insertSessionExercise(sessionExercise: SessionExercise) =
-        dao.insertSessionExercise(sessionExercise)
-
-    override suspend fun removeSessionExercise(sessionExercise: SessionExercise) =
-        dao.removeSessionExercise(sessionExercise)
-
+    override suspend fun insertSessionExercise(sessionExercise: SessionExercise) = dao.insertSessionExercise(sessionExercise)
+    override suspend fun removeSessionExercise(sessionExercise: SessionExercise) = dao.removeSessionExercise(sessionExercise)
     override suspend fun insertSet(gymSet: GymSet) = dao.insertSet(gymSet)
-
     override suspend fun updateSet(set: GymSet) = dao.updateSet(set)
-
     override suspend fun deleteSet(set: GymSet) = dao.deleteSet(set)
-
     override suspend fun createSet(sessionExercise: SessionExercise): Long =
         dao.insertSet(GymSet(parentSessionExerciseId = sessionExercise.sessionExerciseId))
 
@@ -129,24 +137,9 @@ class MysRepositoryImpl @Inject constructor(
             sets = dao.getSetList()
         )
 
-    override suspend fun clearDatabase() {
-        Timber.i("Clearing and repopulating database")
-        db.clearAllTables()
-        dao.deletePrimaryKeyIndex()
-        val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        prefs.edit { putInt(VERSION_KEY, 0) }
-        populateDatabaseCallback.checkAndPopulateDatabase(_currentLanguage.value)
-    }
-    override suspend fun deleteSessionById(sessionId: Long) {
-        dao.deleteSessionById(sessionId)
-    }
-
+    override suspend fun deleteSessionById(sessionId: Long) = dao.deleteSessionById(sessionId)
     override fun getAllEquipment(): Flow<List<String>> = dao.getAllEquipment()
-
     override fun getAllMuscles(): Flow<List<String>> = dao.getAllMuscles()
-
     override fun getUsedExerciseIds(): Flow<List<String>> = dao.getUsedExerciseIds()
-
     override fun getSessionExerciseById(id: Long): SessionExercise = dao.getSessionExerciseById(id)
-
 }

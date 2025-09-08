@@ -13,4 +13,6 @@ sealed class HomeEvent : Event {
     object NewSession : HomeEvent()
     object OpenSettings : HomeEvent()
     object CheckUpdates : HomeEvent()
+    data class SwitchLanguage(val lang: String) : HomeEvent() // <-- nuevo
+
 }

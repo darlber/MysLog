@@ -79,7 +79,12 @@ class HomeViewModel @Inject constructor(
                     }
                 }
             }
-
+            is HomeEvent.SwitchLanguage -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    repo.switchLanguage(event.lang)
+                    sendUiEvent(UiEvent.ShowSnackbar("Idioma cambiado a ${event.lang}"))
+                }
+            }
             is HomeEvent.CheckUpdates -> {
                 viewModelScope.launch(Dispatchers.IO) {
                     val updated = repo.checkForUpdates()
@@ -89,9 +94,9 @@ class HomeViewModel @Inject constructor(
             }
         }
     }
-    suspend fun checkForUpdatesSuspend(lang: String = "es"): Boolean {
+    suspend fun checkForUpdatesSuspend(lang: String): Boolean {
         val result = repo.checkForUpdates(lang)
-        Timber.d("checkForUpdatesSuspend returned $result for lang=$lang")
+        Timber.d("checkForUpdatesSuspend returned $result para lang=$lang")
         return result
     }
 
