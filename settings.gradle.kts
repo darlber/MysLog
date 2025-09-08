@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "ExerLog"
+rootProject.name = "MysLog"
 include(":app")
  

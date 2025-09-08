@@ -1,17 +1,17 @@
 <resources>
 
     <!-- Tema para la SplashScreen -->
-    <style name="Theme.ExerLog.Splash" parent="Theme.SplashScreen">
+    <style name="Theme.MysLogApp.Splash" parent="Theme.SplashScreen">
         <!-- Tu icono para la splash -->
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_background</item>
         <!-- Color de fondo -->
         <item name="windowSplashScreenBackground">#FFFFFF</item> <!-- blanco -->
         <!-- Duración mínima del splash (opcional) -->
-        <item name="postSplashScreenTheme">@style/Theme.ExerLog</item>
+        <item name="postSplashScreenTheme">@style/Theme.MysLogApp</item>
     </style>
 
     <!-- Tema principal -->
-    <style name="Theme.ExerLog" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.MysLogApp" parent="android:Theme.Material.Light.NoActionBar">
 
     </style>
 

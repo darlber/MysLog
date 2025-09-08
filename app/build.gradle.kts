@@ -9,11 +9,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.exerlog"
+    namespace = "com.example.myslog"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.exerlog"
+        applicationId = "com.example.myslog"
         minSdk = 27
         targetSdk = 36
         versionCode = 1

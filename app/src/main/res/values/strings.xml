@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ExerLog</string>
+    <string name="app_name">MysLog</string>
 
     // equipment
     <string name="equipment_atlas_stone">Atlas Stone</string>
