@@ -121,4 +121,22 @@ interface MysDAO {
     @Query("SELECT * FROM $SESSIONEXERCISE WHERE sessionExerciseId = :id")
     fun getSessionExerciseById(id: Long): SessionExercise
 
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertWorkout(workout: Workout): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertWorkoutExercise(workoutExercise: WorkoutExercise): Long
+
+    @Query("SELECT * FROM workout ORDER BY name ASC")
+    fun getAllWorkouts(): Flow<List<Workout>>
+
+    @Query("SELECT * FROM workout_exercise WHERE parentWorkoutId = :workoutId")
+    fun getExercisesForWorkout(workoutId: Long): Flow<List<WorkoutExercise>>
+
+    @Delete
+    suspend fun deleteWorkout(workout: Workout)
+
+    @Query("DELETE FROM workout WHERE workoutId = :workoutId")
+    suspend fun deleteWorkoutById(workoutId: Long)
 }

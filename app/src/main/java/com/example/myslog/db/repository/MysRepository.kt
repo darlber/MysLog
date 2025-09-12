@@ -5,6 +5,8 @@ import com.example.myslog.db.entities.GymSet
 import com.example.myslog.db.entities.Session
 import com.example.myslog.db.entities.SessionExercise
 import com.example.myslog.db.entities.SessionExerciseWithExercise
+import com.example.myslog.db.entities.Workout
+import com.example.myslog.db.entities.WorkoutExercise
 import com.example.myslog.ui.DatabaseModel
 import kotlinx.coroutines.flow.Flow
 
@@ -40,4 +42,13 @@ interface MysRepository {
     val currentLanguage: Flow<String> // <-- expone idioma actual
     fun getExercisesFlow(): Flow<List<Exercise>>
     suspend fun switchLanguage(lang: String)
+
+    fun getAllWorkouts(): Flow<List<Workout>>
+    fun getExercisesForWorkout(workoutId: Long): Flow<List<WorkoutExercise>>
+
+    suspend fun insertWorkout(workout: Workout): Long
+    suspend fun insertWorkoutExercise(workoutExercise: WorkoutExercise): Long
+    suspend fun deleteWorkout(workout: Workout)
+    suspend fun deleteWorkoutById(workoutId: Long)
+
 }

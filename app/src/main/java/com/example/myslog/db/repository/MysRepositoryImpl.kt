@@ -13,6 +13,8 @@ import com.example.myslog.db.entities.GymSet
 import com.example.myslog.db.entities.Session
 import com.example.myslog.db.entities.SessionExercise
 import com.example.myslog.db.entities.SessionExerciseWithExercise
+import com.example.myslog.db.entities.Workout
+import com.example.myslog.db.entities.WorkoutExercise
 import com.example.myslog.ui.DatabaseModel
 import com.google.gson.Gson
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -141,4 +143,20 @@ class MysRepositoryImpl @Inject constructor(
     override fun getAllMuscles(): Flow<List<String>> = dao.getAllMuscles()
     override fun getUsedExerciseIds(): Flow<List<String>> = dao.getUsedExerciseIds()
     override fun getSessionExerciseById(id: Long): SessionExercise = dao.getSessionExerciseById(id)
+
+    override fun getAllWorkouts(): Flow<List<Workout>> = dao.getAllWorkouts()
+
+    override fun getExercisesForWorkout(workoutId: Long): Flow<List<WorkoutExercise>> =
+        dao.getExercisesForWorkout(workoutId)
+
+    override suspend fun insertWorkout(workout: Workout): Long = dao.insertWorkout(workout)
+
+    override suspend fun insertWorkoutExercise(workoutExercise: WorkoutExercise): Long =
+        dao.insertWorkoutExercise(workoutExercise)
+
+    override suspend fun deleteWorkout(workout: Workout) = dao.deleteWorkout(workout)
+
+    override suspend fun deleteWorkoutById(workoutId: Long) = dao.deleteWorkoutById(workoutId)
+
+
 }

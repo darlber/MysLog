@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myslog.db.entities.Exercise
 import com.example.myslog.db.entities.SessionExercise
+import com.example.myslog.db.entities.Workout
+import com.example.myslog.db.entities.WorkoutExercise
 import com.example.myslog.db.repository.MysRepository
 import com.example.myslog.ui.session.components.StatEntry
 import com.example.myslog.utils.Event
@@ -53,6 +55,13 @@ class ExerciseViewModel @Inject constructor(
     val _allEquipment = MutableStateFlow<List<String>>(emptyList())
     val _allMuscles = MutableStateFlow<List<String>>(emptyList())
 
+    private val _workoutFilter = MutableStateFlow<List<Long>>(emptyList()) // IDs de workouts seleccionados
+    val workoutFilter = _workoutFilter.asStateFlow()
+
+
+    private val _allWorkouts = MutableStateFlow<List<Workout>>(emptyList())
+    val allWorkouts = _allWorkouts.asStateFlow()
+
     //NUEVO: usar exercisesFlow dinámico
 
     val filteredExercises = combine(
@@ -66,17 +75,29 @@ class ExerciseViewModel @Inject constructor(
         usedExercises
     ) { exercises, selected, equipment, muscles, selActive, usedActive, query, useIDs ->
         exercises.filter { exercise ->
-            val muscleGroups = (exercise.primaryMuscles + exercise.secondaryMuscles).map { it.lowercase() }
-            val muscleCondition = muscles.isEmpty() || muscles.any { it.lowercase() in muscleGroups }
-            val equipmentCondition = equipment.isEmpty() || equipment.contains(exercise.equipment.orEmpty())
+            val muscleGroups =
+                (exercise.primaryMuscles + exercise.secondaryMuscles).map { it.lowercase() }
+            val workoutCondition = if (_workoutFilter.value.isEmpty()) true
+            else {
+                _workoutFilter.value.any { workoutId ->
+                    repo.getExercisesForWorkout(workoutId).first().any { it.exerciseId == exercise.id }
+                }
+            }
+            val muscleCondition =
+                muscles.isEmpty() || muscles.any { it.lowercase() in muscleGroups }
+            val equipmentCondition =
+                equipment.isEmpty() || equipment.contains(exercise.equipment.orEmpty())
             val selectedCondition = !selActive || selected.contains(exercise)
             val usedCondition = !usedActive || useIDs.contains(exercise.id)
-            val searchCondition = query.isBlank() || exercise.name.contains(query, ignoreCase = true)
+            val searchCondition =
+                query.isBlank() || exercise.name.contains(query, ignoreCase = true)
             muscleCondition && equipmentCondition && selectedCondition && usedCondition && searchCondition
+
         }.sortedBy { exercise ->
             if (query.isNotBlank()) exercise.name.length else exercise.name.firstOrNull()?.code ?: 0
         }
     }
+
 
     fun changeLanguage(lang: String) {
         viewModelScope.launch {
@@ -104,11 +125,43 @@ class ExerciseViewModel @Inject constructor(
                 _usedExercises.value = ids
             }
         }
+        viewModelScope.launch {
+            repo.getAllWorkouts().collect { workouts ->
+                _allWorkouts.value = workouts
+            }
+        }
+
     }
 
 
     fun onEvent(event: Event) {
         when (event) {
+            is ExerciseEvent.SelectWorkout -> {
+                _workoutFilter.value = _workoutFilter.value.toMutableList().apply {
+                    if (contains(event.workoutId)) remove(event.workoutId)
+                    else add(event.workoutId)
+                }
+            }
+
+            is ExerciseEvent.DeselectWorkouts -> _workoutFilter.value = emptyList()
+
+            is ExerciseEvent.AddWorkout -> {
+                viewModelScope.launch {
+                    val newWorkoutId = repo.insertWorkout(Workout(name = event.workoutName))
+                    _selectedExercises.value.forEach { exercise ->
+                        repo.insertWorkoutExercise(
+                            WorkoutExercise(
+                                parentWorkoutId = newWorkoutId,
+                                exerciseId = exercise.id
+                            )
+                        )
+                    }
+                    // actualizar lista de workouts
+                    _allWorkouts.value = _allWorkouts.value + Workout(newWorkoutId, event.workoutName)
+                }
+            }
+
+
             is ExerciseEvent.OpenGuide -> openGuide(event.exercise)
             is ExerciseEvent.ExerciseSelected -> {
                 _selectedExercises.value = _selectedExercises.value.toMutableList().apply {
@@ -116,6 +169,7 @@ class ExerciseViewModel @Inject constructor(
                     else add(event.exercise)
                 }
             }
+
             is ExerciseEvent.FilterSelected -> _filterSelected.value = !_filterSelected.value
             is ExerciseEvent.FilterUsed -> _filterUsed.value = !_filterUsed.value
             is ExerciseEvent.SelectMuscle -> {
@@ -123,12 +177,14 @@ class ExerciseViewModel @Inject constructor(
                     if (contains(event.muscle)) remove(event.muscle) else add(event.muscle)
                 }
             }
+
             is ExerciseEvent.DeselectMuscles -> _muscleFilter.value = emptyList()
             is ExerciseEvent.SelectEquipment -> {
                 _equipmentFilter.value = _equipmentFilter.value.toMutableList().apply {
                     if (contains(event.equipment)) remove(event.equipment) else add(event.equipment)
                 }
             }
+
             is ExerciseEvent.DeselectEquipment -> _equipmentFilter.value = emptyList()
             is ExerciseEvent.AddExercises -> {
                 viewModelScope.launch {
@@ -144,10 +200,12 @@ class ExerciseViewModel @Inject constructor(
                     }
                 }
             }
+
             is ExerciseEvent.OpenStats -> openStats(event.exercise)
-            is ExerciseEvent.SearchChanged -> _searchText.value = event.text
+            is ExerciseEvent.SearchChanged -> _searchText.value = event.text         }
+
         }
-    }
+
 
     private fun openStats(exercise: Exercise) {
         viewModelScope.launch {

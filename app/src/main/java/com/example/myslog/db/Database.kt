@@ -10,6 +10,8 @@ import com.example.myslog.db.entities.Exercise
 import com.example.myslog.db.entities.GymSet
 import com.example.myslog.db.entities.Session
 import com.example.myslog.db.entities.SessionExercise
+import com.example.myslog.db.entities.Workout
+import com.example.myslog.db.entities.WorkoutExercise
 import com.example.myslog.utils.Converters
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -21,11 +23,13 @@ import timber.log.Timber
         Session::class,
         Exercise::class,
         SessionExercise::class,
-        GymSet::class
+        GymSet::class,
+        Workout::class,
+        WorkoutExercise::class
     ],
     autoMigrations = [
     ],
-    version = 2, exportSchema = true
+    version = 3, exportSchema = true
 )
 
 @TypeConverters(Converters::class)

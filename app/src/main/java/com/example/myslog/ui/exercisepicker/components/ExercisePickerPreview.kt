@@ -5,6 +5,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,7 +17,7 @@ import androidx.compose.material.icons.filled.AccessibilityNew
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -23,8 +25,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.myslog.db.entities.Exercise
+import com.example.myslog.db.entities.Workout
 import com.example.myslog.ui.exercisepicker.ExerciseEvent
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExercisePickerPreview(
@@ -42,7 +44,9 @@ fun ExercisePickerPreview(
     filterSelected: Boolean = false,
     filterUsed: Boolean = false,
     muscleFilterActive: Boolean = false,
-    equipmentFilterActive: Boolean = false
+    equipmentFilterActive: Boolean = false,
+    workoutFilter: List<Long> = emptyList(),
+    allWorkouts: List<Workout> = emptyList()
 ) {
     val filterColors = FilterChipDefaults.filterChipColors(
         selectedContainerColor = MaterialTheme.colorScheme.primary,
@@ -51,6 +55,12 @@ fun ExercisePickerPreview(
         labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
         iconColor = MaterialTheme.colorScheme.onSurfaceVariant
     )
+
+    var showWorkoutNameDialog by remember { mutableStateOf(false) }
+    var workoutName by remember { mutableStateOf("") }
+
+    var showWorkoutDropdown by remember { mutableStateOf(false) }
+    var newWorkoutName by remember { mutableStateOf("") }
 
     Scaffold(
         floatingActionButton = {
@@ -84,13 +94,7 @@ fun ExercisePickerPreview(
                     TextField(
                         value = searchText,
                         onValueChange = onSearchChanged,
-                        label = {
-                            Text(
-                                text = "Search",
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        },
+                        label = { Text("Search", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 4.dp, start = 8.dp, end = 8.dp),
@@ -101,6 +105,7 @@ fun ExercisePickerPreview(
                         shape = RoundedCornerShape(8.dp),
                         textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center)
                     )
+
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -125,18 +130,10 @@ fun ExercisePickerPreview(
                             selected = muscleFilterActive,
                             onClick = onMuscleFilterClick,
                             label = {
-                                Icon(
-                                    Icons.Default.AccessibilityNew,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
-                                )
+                                Icon(Icons.Default.AccessibilityNew, contentDescription = null, modifier = Modifier.size(18.dp))
                             },
                             trailingIcon = {
-                                Icon(
-                                    Icons.Default.ArrowDropDown,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(22.dp)
-                                )
+                                Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(22.dp))
                             },
                             colors = filterColors
                         )
@@ -145,21 +142,71 @@ fun ExercisePickerPreview(
                             selected = equipmentFilterActive,
                             onClick = onEquipmentFilterClick,
                             label = {
-                                Icon(
-                                    Icons.Default.FitnessCenter,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
-                                )
+                                Icon(Icons.Default.FitnessCenter, contentDescription = null, modifier = Modifier.size(18.dp))
                             },
                             trailingIcon = {
-                                Icon(
-                                    Icons.Default.ArrowDropDown,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(22.dp)
-                                )
+                                Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(22.dp))
                             },
                             colors = filterColors
                         )
+                        Spacer(Modifier.width(8.dp))
+                        FilterChip(
+                            selected = showWorkoutDropdown,
+                            onClick = { showWorkoutDropdown = !showWorkoutDropdown },
+                            label = { Text("Workout") },
+                            trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = null) },
+                            colors = filterColors
+                        )
+                    }
+
+                    AnimatedVisibility(visible = showWorkoutDropdown) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp)
+                                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(8.dp))
+                                .padding(8.dp)
+                        ) {
+                            OutlinedTextField(
+                                value = newWorkoutName,
+                                onValueChange = { newWorkoutName = it },
+                                label = { Text("Nuevo Workout") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Button(
+                                onClick = {
+                                    if (newWorkoutName.isNotBlank()) {
+                                        onEvent(ExerciseEvent.AddWorkout(newWorkoutName))
+                                        newWorkoutName = ""
+                                    }
+                                },
+                                modifier = Modifier.padding(top = 4.dp)
+                            ) {
+                                Text("Añadir")
+                            }
+
+                            Spacer(Modifier.height(8.dp))
+
+                            allWorkouts.forEach { workout ->
+                                val isSelected = workoutFilter.contains(workout.workoutId)
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 2.dp)
+                                        .combinedClickable(
+                                            onClick = { onEvent(ExerciseEvent.SelectWorkout(workout.workoutId)) }
+                                        )
+                                ) {
+                                    Checkbox(
+                                        checked = isSelected,
+                                        onCheckedChange = { onEvent(ExerciseEvent.SelectWorkout(workout.workoutId)) }
+                                    )
+                                    Text(workout.name, modifier = Modifier.padding(start = 8.dp))
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -181,7 +228,42 @@ fun ExercisePickerPreview(
             }
         }
     }
+
+    if (showWorkoutNameDialog) {
+        AlertDialog(
+            onDismissRequest = { showWorkoutNameDialog = false },
+            title = { Text("Nombre del Workout") },
+            text = {
+                OutlinedTextField(
+                    value = workoutName,
+                    onValueChange = { workoutName = it },
+                    label = { Text("Ingrese un nombre") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                FilledTonalButton(onClick = {
+                    if (workoutName.isNotBlank()) {
+                        showWorkoutNameDialog = false
+                        workoutName = ""
+                    }
+                }) {
+                    Text("Guardar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showWorkoutNameDialog = false
+                    workoutName = ""
+                }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
 }
+
 
 @Preview(showBackground = true)
 @Composable
