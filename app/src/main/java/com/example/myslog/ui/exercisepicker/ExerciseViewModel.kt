@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -80,6 +81,7 @@ class ExerciseViewModel @Inject constructor(
     fun changeLanguage(lang: String) {
         viewModelScope.launch {
             repo.switchLanguage(lang)
+            Timber.d("Language changed to $lang")
         }
     }
 

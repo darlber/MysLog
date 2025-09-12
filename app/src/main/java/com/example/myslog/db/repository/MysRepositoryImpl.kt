@@ -81,9 +81,8 @@ class MysRepositoryImpl @Inject constructor(
 
     private suspend fun clearDatabaseInternal() {
         withContext(Dispatchers.IO) {
-            Timber.i("Clearing database")
-            db.clearAllTables()
-            dao.deletePrimaryKeyIndex()
+            Timber.i("Clearing exercises")
+            dao.clearExercises()
             val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
             prefs.edit { putInt(VERSION_KEY, 0) }
         }

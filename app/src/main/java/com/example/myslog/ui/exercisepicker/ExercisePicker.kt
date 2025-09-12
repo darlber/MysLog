@@ -24,6 +24,7 @@ import com.example.myslog.ui.session.components.StatEntry
 import com.example.myslog.ui.session.components.StatsPopup
 import com.example.myslog.utils.UiEvent
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,6 +40,7 @@ fun ExercisePicker(
 
     LaunchedEffect(currentDeviceLang) {
         viewModel.changeLanguage(currentDeviceLang)
+        Timber.d("Device language: $currentDeviceLang")
     }
 
 
