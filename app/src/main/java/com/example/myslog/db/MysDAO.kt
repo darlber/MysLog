@@ -139,4 +139,14 @@ interface MysDAO {
 
     @Query("DELETE FROM workout WHERE workoutId = :workoutId")
     suspend fun deleteWorkoutById(workoutId: Long)
+
+    @Query("""
+    SELECT e.* FROM $EXERCISE e
+    INNER JOIN workout_exercise we ON e.id = we.exerciseId
+    WHERE we.parentWorkoutId = :workoutId
+""")
+    fun getExercisesForWorkoutDirect(workoutId: Long): Flow<List<Exercise>>
+    @Delete
+    suspend fun deleteWorkoutExercise(workoutExercise: WorkoutExercise)
+
 }

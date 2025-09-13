@@ -50,5 +50,7 @@ interface MysRepository {
     suspend fun insertWorkoutExercise(workoutExercise: WorkoutExercise): Long
     suspend fun deleteWorkout(workout: Workout)
     suspend fun deleteWorkoutById(workoutId: Long)
+    fun getExercisesForWorkoutExercises(workoutId: Long): Flow<List<Exercise>>
+    suspend fun deleteWorkoutExercise(workoutExercise: WorkoutExercise)
 
 }

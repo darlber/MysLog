@@ -22,5 +22,7 @@ sealed class ExerciseEvent: Event {
     data class SelectWorkout(val workoutId: Long) : ExerciseEvent()
     object DeselectWorkouts : ExerciseEvent()
     data class AddWorkout(val workoutName: String) : ExerciseEvent()
+    data class DeleteWorkout(val workoutId: Long) : ExerciseEvent()
+
 
 }

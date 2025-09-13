@@ -23,6 +23,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -157,6 +158,16 @@ class MysRepositoryImpl @Inject constructor(
     override suspend fun deleteWorkout(workout: Workout) = dao.deleteWorkout(workout)
 
     override suspend fun deleteWorkoutById(workoutId: Long) = dao.deleteWorkoutById(workoutId)
+    override fun getExercisesForWorkoutExercises(workoutId: Long): Flow<List<Exercise>> =
+        getExercisesForWorkout(workoutId).flatMapLatest { workoutExercises ->
+            val exerciseIds = workoutExercises.map { it.exerciseId }
+            getExercisesFlow().map { exercises ->
+                exercises.filter { it.id in exerciseIds }
+            }
+        }
 
+    override suspend fun deleteWorkoutExercise(workoutExercise: WorkoutExercise) {
+        dao.deleteWorkoutExercise(workoutExercise)
+    }
 
 }

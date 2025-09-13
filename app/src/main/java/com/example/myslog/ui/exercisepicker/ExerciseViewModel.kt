@@ -58,6 +58,8 @@ class ExerciseViewModel @Inject constructor(
     private val _workoutFilter = MutableStateFlow<List<Long>>(emptyList()) // IDs de workouts seleccionados
     val workoutFilter = _workoutFilter.asStateFlow()
 
+    private val _filteredExercisesForSelected = MutableStateFlow<List<Exercise>>(emptyList())
+    val filteredExercisesForSelected = _filteredExercisesForSelected.asStateFlow()
 
     private val _allWorkouts = MutableStateFlow<List<Workout>>(emptyList())
     val allWorkouts = _allWorkouts.asStateFlow()
@@ -65,34 +67,24 @@ class ExerciseViewModel @Inject constructor(
     //NUEVO: usar exercisesFlow dinámico
 
     val filteredExercises = combine(
-        repo.getExercisesFlow(), // dinámico según idioma
+        repo.getExercisesFlow(),
         selectedExercises,
         equipmentFilter,
         muscleFilter,
         filterSelected,
         filterUsed,
         searchText,
-        usedExercises
-    ) { exercises, selected, equipment, muscles, selActive, usedActive, query, useIDs ->
-        exercises.filter { exercise ->
-            val muscleGroups =
-                (exercise.primaryMuscles + exercise.secondaryMuscles).map { it.lowercase() }
-            val workoutCondition = if (_workoutFilter.value.isEmpty()) true
-            else {
-                _workoutFilter.value.any { workoutId ->
-                    repo.getExercisesForWorkout(workoutId).first().any { it.exerciseId == exercise.id }
-                }
-            }
-            val muscleCondition =
-                muscles.isEmpty() || muscles.any { it.lowercase() in muscleGroups }
-            val equipmentCondition =
-                equipment.isEmpty() || equipment.contains(exercise.equipment.orEmpty())
-            val selectedCondition = !selActive || selected.contains(exercise)
+        usedExercises,
+        _filteredExercisesForSelected
+    ) { exercises, selected, equipment, muscles, selActive, usedActive, query, useIDs, selectedFiltered ->
+        val baseList = if (selActive) selectedFiltered else exercises
+        baseList.filter { exercise ->
+            val muscleGroups = (exercise.primaryMuscles + exercise.secondaryMuscles).map { it.lowercase() }
+            val muscleCondition = muscles.isEmpty() || muscles.any { it.lowercase() in muscleGroups }
+            val equipmentCondition = equipment.isEmpty() || equipment.contains(exercise.equipment.orEmpty())
             val usedCondition = !usedActive || useIDs.contains(exercise.id)
-            val searchCondition =
-                query.isBlank() || exercise.name.contains(query, ignoreCase = true)
-            muscleCondition && equipmentCondition && selectedCondition && usedCondition && searchCondition
-
+            val searchCondition = query.isBlank() || exercise.name.contains(query, ignoreCase = true)
+            muscleCondition && equipmentCondition && usedCondition && searchCondition
         }.sortedBy { exercise ->
             if (query.isNotBlank()) exercise.name.length else exercise.name.firstOrNull()?.code ?: 0
         }
@@ -137,9 +129,18 @@ class ExerciseViewModel @Inject constructor(
     fun onEvent(event: Event) {
         when (event) {
             is ExerciseEvent.SelectWorkout -> {
-                _workoutFilter.value = _workoutFilter.value.toMutableList().apply {
-                    if (contains(event.workoutId)) remove(event.workoutId)
-                    else add(event.workoutId)
+                viewModelScope.launch {
+                    _workoutFilter.value = listOf(event.workoutId)
+
+                    val exercisesToSelect = withContext(Dispatchers.IO) {
+                        repo.getExercisesForWorkoutExercises(event.workoutId).first()
+                    }
+
+                    _selectedExercises.value = exercisesToSelect
+
+                    // Activar filtro Selected sin recomponer toda la lista original
+                    _filterSelected.value = true
+                    _filteredExercisesForSelected.value = exercisesToSelect
                 }
             }
 
@@ -156,11 +157,21 @@ class ExerciseViewModel @Inject constructor(
                             )
                         )
                     }
-                    // actualizar lista de workouts
-                    _allWorkouts.value = _allWorkouts.value + Workout(newWorkoutId, event.workoutName)
                 }
             }
 
+            is ExerciseEvent.DeleteWorkout -> {
+                viewModelScope.launch {
+                    // Borrar todos los ejercicios asociados
+                    val workoutExercises = repo.getExercisesForWorkout(event.workoutId).first()
+                    workoutExercises.forEach { we ->
+                        repo.deleteWorkoutExercise(we)
+                    }
+
+                    // Borrar el workout
+                    repo.deleteWorkoutById(event.workoutId)
+                }
+            }
 
             is ExerciseEvent.OpenGuide -> openGuide(event.exercise)
             is ExerciseEvent.ExerciseSelected -> {
@@ -237,8 +248,8 @@ class ExerciseViewModel @Inject constructor(
     }
 }
 
-inline fun <T1, T2, T3, T4, T5, T6, T7, T8, R> combine(
-    flow: Flow<T1>,
+inline fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, R> combine(
+    flow1: Flow<T1>,
     flow2: Flow<T2>,
     flow3: Flow<T3>,
     flow4: Flow<T4>,
@@ -246,18 +257,10 @@ inline fun <T1, T2, T3, T4, T5, T6, T7, T8, R> combine(
     flow6: Flow<T6>,
     flow7: Flow<T7>,
     flow8: Flow<T8>,
-    crossinline transform: suspend (T1, T2, T3, T4, T5, T6, T7, T8) -> R
+    flow9: Flow<T9>,
+    crossinline transform: suspend (T1, T2, T3, T4, T5, T6, T7, T8, T9) -> R
 ): Flow<R> {
-    return combine(
-        flow,
-        flow2,
-        flow3,
-        flow4,
-        flow5,
-        flow6,
-        flow7,
-        flow8
-    ) { args: Array<*> ->
+    return combine(flow1, flow2, flow3, flow4, flow5, flow6, flow7, flow8, flow9) { args: Array<*> ->
         @Suppress("UNCHECKED_CAST")
         transform(
             args[0] as T1,
@@ -267,7 +270,8 @@ inline fun <T1, T2, T3, T4, T5, T6, T7, T8, R> combine(
             args[4] as T5,
             args[5] as T6,
             args[6] as T7,
-            args[7] as T8
+            args[7] as T8,
+            args[8] as T9
         )
     }
 }

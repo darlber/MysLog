@@ -9,8 +9,10 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.myslog.db.entities.Exercise
+import com.example.myslog.ui.exercisepicker.components.EquipmentSheet
 import com.example.myslog.ui.exercisepicker.components.ExercisePickerPreview
 import com.example.myslog.ui.exercisepicker.components.ImagePopup
+import com.example.myslog.ui.exercisepicker.components.MuscleSheet
 import com.example.myslog.ui.session.components.StatEntry
 import com.example.myslog.ui.session.components.StatsPopup
 import com.example.myslog.utils.UiEvent
@@ -45,6 +47,9 @@ fun ExercisePicker(
     val filterUsed by viewModel.filterUsed.collectAsState()
     val workoutFilter by viewModel.workoutFilter.collectAsState()
     val allWorkouts by viewModel.allWorkouts.collectAsState()
+
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var equipmentBottomsheet by remember { mutableStateOf(false) }
 
     val keyboardController = LocalSoftwareKeyboardController.current
     val coroutineScope = rememberCoroutineScope()
@@ -95,8 +100,20 @@ fun ExercisePicker(
         onEvent = viewModel::onEvent,
         onFilterSelectedClick = { viewModel.onEvent(ExerciseEvent.FilterSelected) },
         onFilterUsedClick = { viewModel.onEvent(ExerciseEvent.FilterUsed) },
-        onMuscleFilterClick = {},
-        onEquipmentFilterClick = {},
+        onMuscleFilterClick = {
+            equipmentBottomsheet = false
+            coroutineScope.launch {
+                keyboardController?.hide()
+                sheetState.show()
+            }
+        },
+        onEquipmentFilterClick = {
+            equipmentBottomsheet = true
+            coroutineScope.launch {
+                keyboardController?.hide()
+                sheetState.show()
+            }
+        },
         filterSelected = filterSelected,
         filterUsed = filterUsed,
         muscleFilterActive = muscleFilter.isNotEmpty(),
@@ -104,7 +121,26 @@ fun ExercisePicker(
         workoutFilter = workoutFilter,
         allWorkouts = allWorkouts
     )
-
+    if (sheetState.isVisible) {
+        ModalBottomSheet(
+            onDismissRequest = { coroutineScope.launch { sheetState.hide() } },
+            sheetState = sheetState
+        ) {
+            if (equipmentBottomsheet) {
+                EquipmentSheet(
+                    selectedEquipment = equipmentFilter,
+                    allEquipment = allEquipment,
+                    onEvent = viewModel::onEvent
+                )
+            } else {
+                MuscleSheet(
+                    selectedMusclegroups = muscleFilter,
+                    allMuscleGroups = allMusclesList,
+                    onEvent = viewModel::onEvent
+                )
+            }
+        }
+    }
     // Popup de imagen del ejercicio
     if (showPopupExerciseId != null) {
         val exercise: Exercise? = exercises.find { it.id == showPopupExerciseId }
