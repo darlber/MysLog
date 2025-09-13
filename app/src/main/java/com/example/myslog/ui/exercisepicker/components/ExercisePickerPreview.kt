@@ -23,9 +23,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.filled.AccessibilityNew
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -214,7 +216,7 @@ fun ExercisePickerPreview(
                             onClick = { showWorkoutDropdown = !showWorkoutDropdown },
                             label = {
                                 Icon(
-                                    Icons.Default.FitnessCenter,
+                                    Icons.AutoMirrored.Filled.DirectionsRun,
                                     contentDescription = null,
                                     modifier = Modifier.size(18.dp)
                                 )
