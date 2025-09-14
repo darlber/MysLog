@@ -18,7 +18,6 @@ sealed class ExerciseEvent: Event {
     data class OpenGuide(val exercise: Exercise) : ExerciseEvent()
     data class OpenStats(val exercise: Exercise) : ExerciseEvent()
 
-    data class SaveWorkout(val workoutName: String) : ExerciseEvent()
     data class SelectWorkout(val workoutId: Long) : ExerciseEvent()
     object DeselectWorkouts : ExerciseEvent()
     data class AddWorkout(val workoutName: String) : ExerciseEvent()

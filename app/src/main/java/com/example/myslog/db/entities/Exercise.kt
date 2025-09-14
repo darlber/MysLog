@@ -22,8 +22,4 @@ data class Exercise(
     fun getMuscleGroups(exercise: Exercise = this): List<String> {
         return exercise.primaryMuscles.distinct()
     }
-
-//    fun getStringMatch(string: String): Boolean {
-//        return FuzzySearch.regexMatch(string, nae)
-//    }
 }

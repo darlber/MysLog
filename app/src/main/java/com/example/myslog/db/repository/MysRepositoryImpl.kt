@@ -4,27 +4,16 @@ import android.content.Context
 import androidx.core.content.edit
 import com.example.myslog.core.Constants
 import com.example.myslog.core.Constants.Companion.VERSION_KEY
-import com.example.myslog.db.MysDAO
 import com.example.myslog.db.GymDatabase
+import com.example.myslog.db.MysDAO
 import com.example.myslog.db.PopulateDatabaseCallback
-import com.example.myslog.db.entities.Exercise
-import com.example.myslog.db.entities.ExercisesVersion
-import com.example.myslog.db.entities.GymSet
-import com.example.myslog.db.entities.Session
-import com.example.myslog.db.entities.SessionExercise
-import com.example.myslog.db.entities.SessionExerciseWithExercise
-import com.example.myslog.db.entities.Workout
-import com.example.myslog.db.entities.WorkoutExercise
+import com.example.myslog.db.entities.*
 import com.example.myslog.ui.DatabaseModel
 import com.google.gson.Gson
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
@@ -41,6 +30,11 @@ class MysRepositoryImpl @Inject constructor(
     private val _currentLanguage = MutableStateFlow(populateDatabaseCallback.getCurrentLanguage())
     override val currentLanguage: Flow<String> = _currentLanguage
 
+    companion object {
+        private val gson = Gson()
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun getExercisesFlow(): Flow<List<Exercise>> =
         _currentLanguage.flatMapLatest { dao.getAllExercises() }
 
@@ -51,7 +45,7 @@ class MysRepositoryImpl @Inject constructor(
         val remoteUrl = Constants.getJsonUrlForLanguage(lang)
         val remoteJson = populateDatabaseCallback.downloadJsonFromGitHub(remoteUrl) ?: return false
 
-        val exercisesVersion = Gson().fromJson(remoteJson, ExercisesVersion::class.java)
+        val exercisesVersion = gson.fromJson(remoteJson, ExercisesVersion::class.java)
         val remoteVersion = exercisesVersion.version
 
         return if (remoteVersion > localVersion) {
@@ -65,15 +59,12 @@ class MysRepositoryImpl @Inject constructor(
 
     override suspend fun switchLanguage(lang: String) {
         withContext(Dispatchers.IO) {
-            // Guardar idioma en preferencias
             val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-            prefs.edit().putString("current_lang", lang).apply()
+            prefs.edit { putString("current_lang", lang) }
             _currentLanguage.value = lang
 
-            // Limpiar la DB
             clearDatabaseInternal()
 
-            // Descargar JSON y poblar DB
             val remoteUrl = Constants.getJsonUrlForLanguage(lang)
             val remoteJson = populateDatabaseCallback.downloadJsonFromGitHub(remoteUrl)
                 ?: return@withContext
@@ -87,16 +78,25 @@ class MysRepositoryImpl @Inject constructor(
             Timber.i("Clearing exercises")
             dao.clearExercises()
             val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-            prefs.edit { putInt(VERSION_KEY, 0) }
+            prefs.edit { putFloat(VERSION_KEY, 0F) }
         }
     }
 
     override suspend fun clearDatabase() {
         withContext(Dispatchers.IO) {
-            clearDatabaseInternal()
+            Timber.i("Clearing all tables")
+            db.clearAllTables()
+            dao.deletePrimaryKeyIndex()
+
+            // Reinicia la versión local para forzar repoblación
+            val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+            prefs.edit { putFloat("${VERSION_KEY}_${_currentLanguage.value}", 0F) }
+
+            // Repoblar usando el idioma actual
             populateDatabaseCallback.checkAndPopulateDatabase(_currentLanguage.value)
         }
     }
+
 
     override fun getSessionById(sessionId: Long) = dao.getSessionById(sessionId)
     override fun getAllSessions() = dao.getAllSessions()
@@ -115,9 +115,8 @@ class MysRepositoryImpl @Inject constructor(
     override fun getSetsForExercise(sessionExerciseId: Long) = dao.getSetsForExercise(sessionExerciseId)
 
     override fun getMuscleGroupsForSession(session: Session): Flow<List<String>> =
-        dao.getMuscleGroupsForSession(session.sessionId).mapNotNull {
-            try { emptyList() } catch (_: Exception) { Timber.d("Error target"); emptyList() }
-        }
+        dao.getMuscleGroupsForSession(session.sessionId)
+            .map { it.split("|").filter { s -> s.isNotEmpty() } }
 
     override suspend fun insertExercise(exercise: Exercise) = dao.insertExercise(exercise)
     override suspend fun insertSession(session: Session) = dao.insertSession(session)
@@ -151,13 +150,12 @@ class MysRepositoryImpl @Inject constructor(
         dao.getExercisesForWorkout(workoutId)
 
     override suspend fun insertWorkout(workout: Workout): Long = dao.insertWorkout(workout)
-
     override suspend fun insertWorkoutExercise(workoutExercise: WorkoutExercise): Long =
         dao.insertWorkoutExercise(workoutExercise)
-
     override suspend fun deleteWorkout(workout: Workout) = dao.deleteWorkout(workout)
-
     override suspend fun deleteWorkoutById(workoutId: Long) = dao.deleteWorkoutById(workoutId)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun getExercisesForWorkoutExercises(workoutId: Long): Flow<List<Exercise>> =
         getExercisesForWorkout(workoutId).flatMapLatest { workoutExercises ->
             val exerciseIds = workoutExercises.map { it.exerciseId }
@@ -169,5 +167,4 @@ class MysRepositoryImpl @Inject constructor(
     override suspend fun deleteWorkoutExercise(workoutExercise: WorkoutExercise) {
         dao.deleteWorkoutExercise(workoutExercise)
     }
-
 }

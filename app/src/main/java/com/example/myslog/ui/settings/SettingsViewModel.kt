@@ -53,13 +53,7 @@ class SettingsViewModel @Inject constructor(
     private val _uiEvent = Channel<UiEvent>()
     val uiEvent = _uiEvent.receiveAsFlow()
 
-    private fun sendUiEvent(event: UiEvent) {
-        viewModelScope.launch {
-            _uiEvent.send(event)
-        }
-    }
-
-//    private fun exportDatabase(uri: Uri, context: Context) {
+    //    private fun exportDatabase(uri: Uri, context: Context) {
 //        val gson = Converters.registerAll(GsonBuilder().setPrettyPrinting()).create()
 //        val databaseModel = repo.getDatabaseModel()
 //        val ob = gson.toJson(databaseModel)

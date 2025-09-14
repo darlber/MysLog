@@ -6,7 +6,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,11 +26,9 @@ import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.filled.AccessibilityNew
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
@@ -74,18 +71,18 @@ fun ExercisePickerPreview(
     onEvent: (ExerciseEvent) -> Unit,
     searchText: String,
     onSearchChanged: (String) -> Unit,
-    onFilterSelectedClick: () -> Unit,
-    onFilterUsedClick: () -> Unit,
-    onMuscleFilterClick: () -> Unit,
-    onEquipmentFilterClick: () -> Unit,
     filterSelected: Boolean = false,
     filterUsed: Boolean = false,
     muscleFilterActive: Boolean = false,
     equipmentFilterActive: Boolean = false,
     workoutFilter: List<Long> = emptyList(),
-    allWorkouts: List<Workout> = emptyList()
+    allWorkouts: List<Workout> = emptyList(),
+    onFilterSelectedClick: () -> Unit,
+    onFilterUsedClick: () -> Unit,
+    onMuscleFilterClick: () -> Unit,
+    onEquipmentFilterClick: () -> Unit
 ) {
-    val filterColors = FilterChipDefaults.filterChipColors(
+    FilterChipDefaults.filterChipColors(
         selectedContainerColor = MaterialTheme.colorScheme.primary,
         selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
         selectedTrailingIconColor = MaterialTheme.colorScheme.onPrimary,
@@ -93,209 +90,49 @@ fun ExercisePickerPreview(
         iconColor = MaterialTheme.colorScheme.onSurfaceVariant
     )
 
-    var showWorkoutNameDialog by remember { mutableStateOf(false) }
-    var workoutName by remember { mutableStateOf("") }
-
     var showWorkoutDropdown by remember { mutableStateOf(false) }
     var newWorkoutName by remember { mutableStateOf("") }
 
     Scaffold(
         floatingActionButton = {
-            Box(modifier = Modifier
-                .height(64.dp)
-                .width(80.dp)) {
-                AnimatedVisibility(
-                    visible = selectedExercises.isNotEmpty(),
-                    enter = scaleIn() + fadeIn(),
-                    exit = scaleOut() + fadeOut()
+            AnimatedVisibility(
+                visible = selectedExercises.isNotEmpty(),
+                enter = scaleIn() + fadeIn(),
+                exit = scaleOut() + fadeOut()
+            ) {
+                FloatingActionButton(
+                    onClick = onAddClick,
+                    containerColor = MaterialTheme.colorScheme.primary
                 ) {
-                    FloatingActionButton(
-                        onClick = onAddClick,
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.align(Alignment.BottomEnd)
-                    ) {
-                        Text(
-                            text = "ADD ${selectedExercises.size}",
-                            modifier = Modifier
-                                .padding(vertical = 4.dp, horizontal = 10.dp)
-                                .fillMaxWidth(),
-                            style = MaterialTheme.typography.labelLarge,
-                            textAlign = TextAlign.Center
-                        )
-                    }
+                    Text(
+                        "ADD ${selectedExercises.size}",
+                        modifier = Modifier.padding(vertical = 4.dp, horizontal = 10.dp),
+                        style = MaterialTheme.typography.labelLarge,
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
         },
         topBar = {
-            Surface(shape = CutCornerShape(0.dp), tonalElevation = 2.dp) {
-                Column {
-                    Spacer(Modifier.height(40.dp))
-                    TextField(
-                        value = searchText,
-                        onValueChange = onSearchChanged,
-                        label = {
-                            Text(
-                                "Search",
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 4.dp, start = 8.dp, end = 8.dp),
-                        colors = TextFieldDefaults.colors(
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent
-                        ),
-                        shape = RoundedCornerShape(8.dp),
-                        textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center)
-                    )
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(end = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        FilterChip(
-                            selected = filterSelected,
-                            onClick = onFilterSelectedClick,
-                            label = { Text("Selected") },
-                            colors = filterColors
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        FilterChip(
-                            selected = filterUsed,
-                            onClick = onFilterUsedClick,
-                            label = { Text("Used") },
-                            colors = filterColors
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        FilterChip(
-                            selected = muscleFilterActive,
-                            onClick = onMuscleFilterClick,
-                            label = {
-                                Icon(
-                                    Icons.Default.AccessibilityNew,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            },
-                            trailingIcon = {
-                                Icon(
-                                    Icons.Default.ArrowDropDown,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(22.dp)
-                                )
-                            },
-                            colors = filterColors
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        FilterChip(
-                            selected = equipmentFilterActive,
-                            onClick = onEquipmentFilterClick,
-                            label = {
-                                Icon(
-                                    Icons.Default.FitnessCenter,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            },
-                            trailingIcon = {
-                                Icon(
-                                    Icons.Default.ArrowDropDown,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(22.dp)
-                                )
-                            },
-                            colors = filterColors
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        FilterChip(
-                            selected = workoutFilter.isNotEmpty(),
-                            onClick = { showWorkoutDropdown = !showWorkoutDropdown },
-                            label = {
-                                Icon(
-                                    Icons.AutoMirrored.Filled.DirectionsRun,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            },
-                            trailingIcon = {
-                                Icon(
-                                    Icons.Default.ArrowDropDown,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(22.dp)
-                                )
-                            },
-                            colors = filterColors
-                        )
-                    }
-
-                    AnimatedVisibility(visible = showWorkoutDropdown) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp)
-                                .background(
-                                    MaterialTheme.colorScheme.surface,
-                                    RoundedCornerShape(8.dp)
-                                )
-                                .padding(8.dp)
-                        ) {
-                            OutlinedTextField(
-                                value = newWorkoutName,
-                                onValueChange = { newWorkoutName = it },
-                                label = { Text("Nuevo Workout") },
-                                singleLine = true,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            Button(
-                                onClick = {
-                                    if (newWorkoutName.isNotBlank()) {
-                                        onEvent(ExerciseEvent.AddWorkout(newWorkoutName))
-                                        newWorkoutName = ""
-                                    }
-                                },
-                                modifier = Modifier.padding(top = 4.dp)
-                            ) {
-                                Text("Añadir")
-                            }
-
-                            Spacer(Modifier.height(8.dp))
-
-                            val selectedWorkoutId = workoutFilter.firstOrNull()
-                            allWorkouts.forEach { workout ->
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 2.dp)
-                                ) {
-                                    RadioButton(
-                                        selected = workout.workoutId == selectedWorkoutId,
-                                        onClick = { onEvent(ExerciseEvent.SelectWorkout(workout.workoutId)) }
-                                    )
-                                    Text(
-                                        workout.name,
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .padding(start = 8.dp)
-                                    )
-                                    IconButton(
-                                        onClick = { onEvent(ExerciseEvent.DeleteWorkout(workout.workoutId)) }
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Delete,
-                                            contentDescription = "Borrar Workout"
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            ExercisePickerTopBar(
+                searchText = searchText,
+                onSearchChanged = onSearchChanged,
+                filterSelected = filterSelected,
+                filterUsed = filterUsed,
+                muscleFilterActive = muscleFilterActive,
+                equipmentFilterActive = equipmentFilterActive,
+                workoutFilter = workoutFilter,
+                allWorkouts = allWorkouts,
+                showWorkoutDropdown = showWorkoutDropdown,
+                onFilterSelectedClick = onFilterSelectedClick,
+                onFilterUsedClick = onFilterUsedClick,
+                onMuscleFilterClick = onMuscleFilterClick,
+                onEquipmentFilterClick = onEquipmentFilterClick,
+                onWorkoutToggle = { showWorkoutDropdown = !showWorkoutDropdown },
+                onEvent = onEvent,
+                newWorkoutName = newWorkoutName,
+                onNewWorkoutNameChange = { newWorkoutName = it }
+            )
         }
     ) { paddingValues ->
         LazyColumn(
@@ -306,47 +143,114 @@ fun ExercisePickerPreview(
             item { Spacer(modifier = Modifier.height(paddingValues.calculateTopPadding() + 8.dp)) }
             items(exercises) { exercise ->
                 val isSelected = selectedExercises.contains(exercise)
-                ExerciseCard(
-                    exercise = exercise,
-                    selected = isSelected,
-                    onEvent = onEvent
-                ) { onExerciseClick(exercise) }
+                ExerciseCard(exercise = exercise, selected = isSelected, onEvent = onEvent) {
+                    onExerciseClick(exercise)
+                }
             }
         }
     }
+}
 
-    if (showWorkoutNameDialog) {
-        AlertDialog(
-            onDismissRequest = { showWorkoutNameDialog = false },
-            title = { Text("Nombre del Workout") },
-            text = {
-                OutlinedTextField(
-                    value = workoutName,
-                    onValueChange = { workoutName = it },
-                    label = { Text("Ingrese un nombre") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            confirmButton = {
-                FilledTonalButton(onClick = {
-                    if (workoutName.isNotBlank()) {
-                        showWorkoutNameDialog = false
-                        workoutName = ""
-                    }
-                }) {
-                    Text("Guardar")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    showWorkoutNameDialog = false
-                    workoutName = ""
-                }) {
-                    Text("Cancelar")
+@Composable
+private fun ExercisePickerTopBar(
+    searchText: String,
+    onSearchChanged: (String) -> Unit,
+    filterSelected: Boolean,
+    filterUsed: Boolean,
+    muscleFilterActive: Boolean,
+    equipmentFilterActive: Boolean,
+    workoutFilter: List<Long>,
+    allWorkouts: List<Workout>,
+    showWorkoutDropdown: Boolean,
+    onFilterSelectedClick: () -> Unit,
+    onFilterUsedClick: () -> Unit,
+    onMuscleFilterClick: () -> Unit,
+    onEquipmentFilterClick: () -> Unit,
+    onWorkoutToggle: () -> Unit,
+    onEvent: (ExerciseEvent) -> Unit,
+    newWorkoutName: String,
+    onNewWorkoutNameChange: (String) -> Unit
+) {
+    Column {
+        Spacer(Modifier.height(40.dp))
+        OutlinedTextField(
+            value = searchText,
+            onValueChange = onSearchChanged,
+            label = { Text("Search", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            singleLine = true
+        )
+
+        FilterRow(
+            filterSelected, filterUsed, muscleFilterActive, equipmentFilterActive,
+            workoutFilter.isNotEmpty(), onFilterSelectedClick, onFilterUsedClick,
+            onMuscleFilterClick, onEquipmentFilterClick, onWorkoutToggle
+        )
+
+        if (showWorkoutDropdown) {
+            WorkoutDropdown(allWorkouts, workoutFilter.firstOrNull(), onEvent, newWorkoutName, onNewWorkoutNameChange)
+        }
+    }
+}
+
+@Composable
+private fun FilterRow(
+    filterSelected: Boolean,
+    filterUsed: Boolean,
+    muscleFilterActive: Boolean,
+    equipmentFilterActive: Boolean,
+    workoutFilterActive: Boolean,
+    onFilterSelectedClick: () -> Unit,
+    onFilterUsedClick: () -> Unit,
+    onMuscleFilterClick: () -> Unit,
+    onEquipmentFilterClick: () -> Unit,
+    onWorkoutToggle: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(end = 8.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        FilterChip(selected = filterSelected, onClick = onFilterSelectedClick, label = { Text("Selected") })
+        FilterChip(selected = filterUsed, onClick = onFilterUsedClick, label = { Text("Used") })
+        FilterChip(selected = muscleFilterActive, onClick = onMuscleFilterClick, label = { Icon(Icons.Default.AccessibilityNew, null) })
+        FilterChip(selected = equipmentFilterActive, onClick = onEquipmentFilterClick, label = { Icon(Icons.Default.FitnessCenter, null) })
+        FilterChip(selected = workoutFilterActive, onClick = onWorkoutToggle, label = { Icon(Icons.AutoMirrored.Filled.DirectionsRun, null) })
+    }
+}
+
+@Composable
+private fun WorkoutDropdown(
+    allWorkouts: List<Workout>,
+    selectedWorkoutId: Long?,
+    onEvent: (ExerciseEvent) -> Unit,
+    newWorkoutName: String,
+    onNewWorkoutNameChange: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        OutlinedTextField(
+            value = newWorkoutName,
+            onValueChange = onNewWorkoutNameChange,
+            label = { Text("Nuevo Workout") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Button(onClick = { if (newWorkoutName.isNotBlank()) onEvent(ExerciseEvent.AddWorkout(newWorkoutName)) }) {
+            Text("Añadir")
+        }
+        Spacer(Modifier.height(8.dp))
+        allWorkouts.forEach { workout ->
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
+                RadioButton(selected = workout.workoutId == selectedWorkoutId, onClick = { onEvent(ExerciseEvent.SelectWorkout(workout.workoutId)) })
+                Text(workout.name, modifier = Modifier.weight(1f).padding(start = 8.dp))
+                IconButton(onClick = { onEvent(ExerciseEvent.DeleteWorkout(workout.workoutId)) }) {
+                    Icon(Icons.Default.Delete, contentDescription = "Borrar Workout")
                 }
             }
-        )
+        }
     }
 }
 
