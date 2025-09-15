@@ -10,4 +10,7 @@ sealed class SettingsEvent : Event {
 
     object CreateFile: SettingsEvent()
     object ClearDatabase: SettingsEvent()
+
+    data class ToggleKeepScreenOn(val enabled: Boolean) : SettingsEvent()
+
 }

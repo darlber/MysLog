@@ -20,7 +20,9 @@ import com.example.myslog.ui.SessionWrapper
 import com.example.myslog.ui.TimerState
 import com.example.myslog.ui.session.actions.FinishResult
 import com.example.myslog.ui.session.components.DeletionAlertDialog
+import com.example.myslog.ui.session.components.KeepScreenOnEffect
 import com.example.myslog.ui.session.components.SessionPreview
+import com.example.myslog.ui.settings.SettingsViewModel
 import com.example.myslog.utils.TimerService
 import com.example.myslog.utils.UiEvent
 import com.example.myslog.utils.sendTimerAction
@@ -30,11 +32,16 @@ import timber.log.Timber
 @Composable
 fun SessionScreen(
     onNavigate: (UiEvent.Navigate) -> Unit,
-    viewModel: SessionViewModel = hiltViewModel()
+    viewModel: SessionViewModel = hiltViewModel(),
+    settingsViewModel: SettingsViewModel = hiltViewModel()
+
 ) {
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
+    val keepScreenOn by settingsViewModel.keepScreenOn.collectAsState()
 
+    // Aplica el flag para mantener la pantalla encendida según la preferencia
+    KeepScreenOnEffect(keepScreenOn)
     // Estado de dominio desde el ViewModel
     val session by viewModel.session.collectAsState(SessionWrapper(Session(), emptyList()))
     val exercises by viewModel.exercises.collectAsState(initial = emptyList())
