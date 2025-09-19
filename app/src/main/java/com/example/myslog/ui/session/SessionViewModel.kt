@@ -78,7 +78,6 @@ class SessionViewModel @Inject constructor(
         }
     }
 
-
     fun onEvent(event: Event) {
         when (event) {
             is SessionEvent.ExerciseExpanded -> {
@@ -120,19 +119,27 @@ class SessionViewModel @Inject constructor(
                 }
             }
 
+            is SessionEvent.SetCopied -> {
+                viewModelScope.launch {
+                    withContext(Dispatchers.IO) {
+                        val newSet = event.setToCopy.copy(
+                            setId = 0 // que la BD genere el nuevo ID
+                        )
+                        repo.insertSet(newSet)
+                    }
+                }
+            }
             is SessionEvent.SetDeleted -> {
                 viewModelScope.launch {
                     withContext(Dispatchers.IO) {
                         repo.deleteSet(event.set)
 
-                        // Reconstruir la lista de ExerciseWrappers con nueva referencia de sets
                         val updatedExercises = exercises.first().map { ew ->
                             if (ew.sessionExercise.sessionExerciseId == event.set.parentSessionExerciseId) {
                                 ew.copy(sets = ew.sets.filter { it.setId != event.set.setId })
                             } else ew
                         }
 
-                        // Actualizar expandedExercise con la nueva referencia
                         _expandedExercise.value = _expandedExercise.value?.let { expanded ->
                             updatedExercises.find { it.sessionExercise.sessionExerciseId == expanded.sessionExercise.sessionExerciseId }
                         }
@@ -144,9 +151,6 @@ class SessionViewModel @Inject constructor(
             is SessionEvent.TimerReset -> sendUiEvent(UiEvent.ResetTimer)
             is SessionEvent.TimerIncreased -> sendUiEvent(UiEvent.IncrementTimer)
             is SessionEvent.TimerDecreased -> sendUiEvent(UiEvent.DecrementTimer)
-//            is SessionEvent.OpenGuide -> {
-//                expandedExercise.value?.exercise?.let { openGuide(it) }
-//            }
 
             is SessionEvent.AddExercise -> {
                 _session.value.sessionId.let { id ->
@@ -181,9 +185,7 @@ class SessionViewModel @Inject constructor(
                 val newEndTime = LocalDateTime.of(date, event.newTime)
                 viewModelScope.launch {
                     repo.updateSession(
-                        session.copy(
-                            end = newEndTime
-                        ).also { session = it }
+                        session.copy(end = newEndTime).also { session = it }
                     )
                     withContext(Dispatchers.IO) {
                         _session.value = repo.getSessionById(_session.value.sessionId)
@@ -196,19 +198,18 @@ class SessionViewModel @Inject constructor(
                 val newStartTime = LocalDateTime.of(session.start.toLocalDate(), event.newTime)
                 viewModelScope.launch {
                     repo.updateSession(
-                        session.copy(
-                            start = newStartTime
-                        )
+                        session.copy(start = newStartTime)
                     )
                     withContext(Dispatchers.IO) {
                         _session.value = repo.getSessionById(_session.value.sessionId)
                     }
                 }
             }
+
             is SessionEvent.FinishSession -> {
                 finishSession()
                 viewModelScope.launch {
-                    val exercises = exercises.first() // recogemos los ejercicios actuales
+                    val exercises = exercises.first()
                     val result = OpenInFinish().calculateAndFetchFact(exercises)
                     sendUiEvent(UiEvent.ShowFinishResult(result))
                 }
@@ -220,7 +221,7 @@ class SessionViewModel @Inject constructor(
 
     fun finishSession() {
         val now = LocalDateTime.now()
-        if (_session.value.end == null) { // solo actualiza si end es null
+        if (_session.value.end == null) {
             _session.value = _session.value.copy(end = now)
             viewModelScope.launch {
                 repo.updateSession(_session.value)
@@ -230,9 +231,6 @@ class SessionViewModel @Inject constructor(
             Timber.d("Session already has an end time: ${_session.value.end}")
         }
     }
-//    private fun openGuide(exercise: Exercise) {
-//        sendUiEvent(UiEvent.OpenWebsite(url = "https://duckduckgo.com/?q=! exrx ${exercise.name}"))
-//    }
 
     private fun sendUiEvent(event: UiEvent) {
         viewModelScope.launch {

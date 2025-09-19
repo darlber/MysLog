@@ -8,8 +8,10 @@ import java.time.LocalTime
 sealed class SessionEvent : Event {
     data class ExerciseExpanded(val exercise: ExerciseWrapper) : SessionEvent()
     data class ExerciseSelected(val exercise: ExerciseWrapper) : SessionEvent()
+
     data class SetChanged(val updatedSet: GymSet) : SessionEvent()
     data class SetCreated(val sessionExercise: ExerciseWrapper) : SessionEvent()
+    data class SetCopied(val setToCopy: GymSet) : SessionEvent()
     data class SetDeleted(val set: GymSet) : SessionEvent()
 
     object RemoveSelectedExercises : SessionEvent()
@@ -25,6 +27,6 @@ sealed class SessionEvent : Event {
 
     data class StartTimeChanged(val newTime: LocalTime) : SessionEvent()
     data class EndTimeChanged(val newTime: LocalTime) : SessionEvent()
-    object FinishSession : SessionEvent()
 
+    object FinishSession : SessionEvent()
 }

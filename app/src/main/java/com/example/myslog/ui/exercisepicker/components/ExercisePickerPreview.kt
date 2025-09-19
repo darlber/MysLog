@@ -112,8 +112,14 @@ fun ExercisePickerPreview(
                     )
                 }
             }
-        },
-        topBar = {
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues) // 👈 asegura que respete status bar y FAB
+        ) {
+            // 🔹 Barra superior fija
             ExercisePickerTopBar(
                 searchText = searchText,
                 onSearchChanged = onSearchChanged,
@@ -133,18 +139,18 @@ fun ExercisePickerPreview(
                 newWorkoutName = newWorkoutName,
                 onNewWorkoutNameChange = { newWorkoutName = it }
             )
-        }
-    ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 8.dp)
-        ) {
-            item { Spacer(modifier = Modifier.height(paddingValues.calculateTopPadding() + 8.dp)) }
-            items(exercises) { exercise ->
-                val isSelected = selectedExercises.contains(exercise)
-                ExerciseCard(exercise = exercise, selected = isSelected, onEvent = onEvent) {
-                    onExerciseClick(exercise)
+
+            // 🔹 Lista debajo de la barra
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 8.dp)
+            ) {
+                items(exercises) { exercise ->
+                    val isSelected = selectedExercises.contains(exercise)
+                    ExerciseCard(exercise = exercise, selected = isSelected, onEvent = onEvent) {
+                        onExerciseClick(exercise)
+                    }
                 }
             }
         }

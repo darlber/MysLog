@@ -64,8 +64,6 @@ class ExerciseViewModel @Inject constructor(
     private val _allWorkouts = MutableStateFlow<List<Workout>>(emptyList())
     val allWorkouts = _allWorkouts.asStateFlow()
 
-    //NUEVO: usar exercisesFlow dinámico
-
     val filteredExercises = combine(
         repo.getExercisesFlow(),
         selectedExercises,
@@ -77,13 +75,31 @@ class ExerciseViewModel @Inject constructor(
         usedExercises,
         _filteredExercisesForSelected
     ) { exercises, selected, equipment, muscles, selActive, usedActive, query, useIDs, selectedFiltered ->
+
+        fun normalize(text: String): String =
+            java.text.Normalizer.normalize(text.lowercase(), java.text.Normalizer.Form.NFD)
+                .replace("\\p{M}".toRegex(), "") // elimina acentos
+
+        val queryWords = query
+            .lowercase()
+            .split(" ")
+            .filter { it.isNotBlank() }
+            .map { normalize(it) }
+
         val baseList = if (selActive) selectedFiltered else exercises
+
         baseList.filter { exercise ->
-            val muscleGroups = (exercise.primaryMuscles + exercise.secondaryMuscles).map { it.lowercase() }
+            val muscleGroups = (exercise.primaryMuscles).map { it.lowercase() }
             val muscleCondition = muscles.isEmpty() || muscles.any { it.lowercase() in muscleGroups }
             val equipmentCondition = equipment.isEmpty() || equipment.contains(exercise.equipment.orEmpty())
             val usedCondition = !usedActive || useIDs.contains(exercise.id)
-            val searchCondition = query.isBlank() || exercise.name.contains(query, ignoreCase = true)
+
+            val normalizedName = normalize(exercise.name)
+            val nameWords = normalizedName.split(" ")
+
+            val searchCondition = queryWords.isEmpty() ||
+                    queryWords.all { q -> nameWords.any { it.contains(q) } }
+
             muscleCondition && equipmentCondition && usedCondition && searchCondition
         }.sortedBy { exercise ->
             if (query.isNotBlank()) exercise.name.length else exercise.name.firstOrNull()?.code ?: 0
