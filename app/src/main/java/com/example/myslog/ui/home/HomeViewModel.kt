@@ -85,19 +85,7 @@ class HomeViewModel @Inject constructor(
                     sendUiEvent(UiEvent.ShowSnackbar("Idioma cambiado a ${event.lang}"))
                 }
             }
-            is HomeEvent.CheckUpdates -> {
-                viewModelScope.launch(Dispatchers.IO) {
-                    val updated = repo.checkForUpdates()
-                    val message = if (updated) "Base de datos actualizada" else "Ya está al día"
-                    sendUiEvent(UiEvent.ShowSnackbar(message))
-                }
-            }
         }
-    }
-    suspend fun checkForUpdatesSuspend(lang: String): Boolean {
-        val result = repo.checkForUpdates(lang)
-        Timber.d("checkForUpdatesSuspend returned $result para lang=$lang")
-        return result
     }
 
     private fun sendUiEvent(event: UiEvent) {

@@ -20,7 +20,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.example.myslog.core.Constants.Companion.BASE_IMAGE_URL
 import com.example.myslog.db.entities.Exercise
 import com.example.myslog.ui.session.components.SmallPill
 
@@ -36,8 +35,8 @@ fun ImagePopup(
         text = {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()   // ocupa casi todo el ancho
-                    .fillMaxHeight(0.7f) // ocupa 70% de la altura
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.7f)
             ) {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
@@ -65,7 +64,7 @@ fun ImagePopup(
 
                     items(exercise.images) { imageName ->
                         AsyncImage(
-                            model = BASE_IMAGE_URL + imageName,
+                            model = "file:///android_asset/images/$imageName",
                             contentDescription = exercise.name,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -75,7 +74,10 @@ fun ImagePopup(
                     }
 
                     itemsIndexed(exercise.instructions) { index, instruction ->
-                        Text("${index + 1}. $instruction", style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            "${index + 1}. $instruction",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
                 }
             }
@@ -88,21 +90,21 @@ fun ImagePopup(
 fun ImagePopupPreview() {
     ImagePopup(
         exercise = Exercise(
-            id = "asda",
-            name = "Pushs  Up",
-            primaryMuscles = listOf("Chest"),
-            secondaryMuscles = listOf("Triceps", "Shoulders"),
-            images = listOf("push_up_1.jpg", "push_up_2.jpg"),
+            id = "3_4_Sit-Up",
+            name = "3/4 Sit-Up",
+            primaryMuscles = listOf("Abdominals"),
+            secondaryMuscles = emptyList(),
+            images = listOf("3_4_Sit-Up/0.jpg", "3_4_Sit-Up/1.jpg"),
             instructions = listOf(
-                "Start in a plank position with your hands slightly wider than shoulder-width apart.",
-                "Lower your body until your chest nearly touches the floor.",
-                "Push back up to the starting position."
+                "Lie down on the floor and secure your feet. Your legs should be bent at the knees.",
+                "Place your hands behind or to the side of your head.",
+                "Flex your hips and spine to raise your torso toward your knees."
             ),
-            force = "TODO()",
-            level = "TODO()",
-            mechanic = "TODO()",
-            equipment = "TODO()",
-            category = "TODO()"
+            force = "pull",
+            level = "beginner",
+            mechanic = "compound",
+            equipment = "body only",
+            category = "strength"
         ),
         onDismiss = {}
     )

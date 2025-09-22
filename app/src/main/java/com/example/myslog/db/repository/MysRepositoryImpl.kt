@@ -1,15 +1,11 @@
 package com.example.myslog.db.repository
 
 import android.content.Context
-import androidx.core.content.edit
-import com.example.myslog.core.Constants
-import com.example.myslog.core.Constants.Companion.VERSION_KEY
 import com.example.myslog.db.GymDatabase
 import com.example.myslog.db.MysDAO
 import com.example.myslog.db.PopulateDatabaseCallback
 import com.example.myslog.db.entities.*
 import com.example.myslog.ui.DatabaseModel
-import com.google.gson.Gson
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -30,46 +26,15 @@ class MysRepositoryImpl @Inject constructor(
     private val _currentLanguage = MutableStateFlow(populateDatabaseCallback.getCurrentLanguage())
     override val currentLanguage: Flow<String> = _currentLanguage
 
-    companion object {
-        private val gson = Gson()
-    }
-
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getExercisesFlow(): Flow<List<Exercise>> =
         _currentLanguage.flatMapLatest { dao.getAllExercises() }
 
-    override suspend fun checkForUpdates(lang: String): Boolean {
-        val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        val localVersion = prefs.getFloat("${VERSION_KEY}_$lang", 0F)
-
-        val remoteUrl = Constants.getJsonUrlForLanguage(lang)
-        val remoteJson = populateDatabaseCallback.downloadJsonFromGitHub(remoteUrl) ?: return false
-
-        val exercisesVersion = gson.fromJson(remoteJson, ExercisesVersion::class.java)
-        val remoteVersion = exercisesVersion.version
-
-        return if (remoteVersion > localVersion) {
-            populateDatabaseCallback.populateFromJson(remoteJson, lang, localVersion, prefs, force = true)
-            true
-        } else {
-            Timber.i("BD ya actualizada para $lang (v$localVersion)")
-            false
-        }
-    }
-
     override suspend fun switchLanguage(lang: String) {
         withContext(Dispatchers.IO) {
-            val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-            prefs.edit { putString("current_lang", lang) }
             _currentLanguage.value = lang
-
             clearDatabaseInternal()
-
-            val remoteUrl = Constants.getJsonUrlForLanguage(lang)
-            val remoteJson = populateDatabaseCallback.downloadJsonFromGitHub(remoteUrl)
-                ?: return@withContext
-
-            populateDatabaseCallback.populateFromJson(remoteJson, lang, 0F, prefs, force = true)
+            populateDatabaseCallback.populateFromAssets(lang)
         }
     }
 
@@ -77,8 +42,6 @@ class MysRepositoryImpl @Inject constructor(
         withContext(Dispatchers.IO) {
             Timber.i("Clearing exercises")
             dao.clearExercises()
-            val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-            prefs.edit { putFloat(VERSION_KEY, 0F) }
         }
     }
 
@@ -87,16 +50,9 @@ class MysRepositoryImpl @Inject constructor(
             Timber.i("Clearing all tables")
             db.clearAllTables()
             dao.deletePrimaryKeyIndex()
-
-            // Reinicia la versión local para forzar repoblación
-            val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-            prefs.edit { putFloat("${VERSION_KEY}_${_currentLanguage.value}", 0F) }
-
-            // Repoblar usando el idioma actual
-            populateDatabaseCallback.checkAndPopulateDatabase(_currentLanguage.value)
+            populateDatabaseCallback.populateFromAssets(_currentLanguage.value)
         }
     }
-
 
     override fun getSessionById(sessionId: Long) = dao.getSessionById(sessionId)
     override fun getAllSessions() = dao.getAllSessions()

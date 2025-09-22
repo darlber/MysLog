@@ -85,17 +85,7 @@
                                 val lang = Locale.getDefault().language // Detecta idioma del sistema
                                 Timber.d("Idioma actual del sistema: $lang")
 
-                                val hasUpdates = viewModel.checkForUpdatesSuspend(lang)
-                                Timber.d("Resultado checkForUpdates: $hasUpdates")
 
-                                withContext(Dispatchers.Main) {
-                                    val msg = if (hasUpdates) {
-                                        "✅ Base de datos actualizada correctamente ($lang)"
-                                    } else {
-                                        "La base de datos ya estaba actualizada ✅ ($lang)"
-                                    }
-                                    snackbarHostState.showSnackbar(msg)
-                                }
                             }
                         }
                         else -> viewModel.onEvent(event)
