@@ -97,17 +97,6 @@ interface MysDAO {
     @Query("SELECT * FROM $GYMSET")
     fun getSetList(): List<GymSet>
 
-    @Query("DELETE FROM $SESSIONWORKOUT")
-    suspend fun clearSessions()
-
-    @Query("DELETE FROM $SESSIONEXERCISE")
-    suspend fun clearSessionExercises()
-
-    @Query("DELETE FROM $GYMSET")
-    suspend fun clearSets()
-
-    @Query("DELETE FROM $EXERCISE")
-    suspend fun clearExercises()
 
     @Query("DELETE FROM session WHERE sessionId = :sessionId")
     suspend fun deleteSessionById(sessionId: Long)
@@ -115,12 +104,8 @@ interface MysDAO {
     @Query("DELETE FROM sqlite_sequence WHERE name = '$SESSIONWORKOUT'")
     suspend fun deletePrimaryKeyIndex()
 
-    @Query("SELECT COUNT(*) FROM $EXERCISE")
-    suspend fun countExercises(): Int
-
     @Query("SELECT * FROM $SESSIONEXERCISE WHERE sessionExerciseId = :id")
     fun getSessionExerciseById(id: Long): SessionExercise
-
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertWorkout(workout: Workout): Long

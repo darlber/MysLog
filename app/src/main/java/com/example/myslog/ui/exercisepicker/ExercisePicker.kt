@@ -25,15 +25,6 @@ fun ExercisePicker(
     navController: NavController,
     viewModel: ExerciseViewModel = hiltViewModel()
 ) {
-    val configuration = LocalConfiguration.current
-    val currentDeviceLang = configuration.locales[0].language.let { lang ->
-        if (lang in listOf("en", "es")) lang else "en"
-    }
-
-    LaunchedEffect(currentDeviceLang) {
-        viewModel.changeLanguage(currentDeviceLang)
-        Timber.d("Device language: $currentDeviceLang")
-    }
 
     // Estados de UI
     val exercises by viewModel.filteredExercises.collectAsState(initial = emptyList())

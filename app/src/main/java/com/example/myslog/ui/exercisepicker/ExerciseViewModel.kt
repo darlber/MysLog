@@ -107,13 +107,6 @@ class ExerciseViewModel @Inject constructor(
     }
 
 
-    fun changeLanguage(lang: String) {
-        viewModelScope.launch {
-            repo.switchLanguage(lang)
-            Timber.d("Language changed to $lang")
-        }
-    }
-
     private val _uiEvent = Channel<UiEvent>()
     val uiEvent = _uiEvent.receiveAsFlow()
 

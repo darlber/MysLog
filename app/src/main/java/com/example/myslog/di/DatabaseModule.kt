@@ -49,5 +49,5 @@ object DatabaseModule {
         db: GymDatabase,
         dao: MysDAO,
         pd: PopulateDatabaseCallback
-    ): MysRepository = MysRepositoryImpl(dao, db, pd, context)
+    ): MysRepository = MysRepositoryImpl(dao, db, pd)
 }

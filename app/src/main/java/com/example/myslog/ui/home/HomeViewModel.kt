@@ -79,12 +79,6 @@ class HomeViewModel @Inject constructor(
                     }
                 }
             }
-            is HomeEvent.SwitchLanguage -> {
-                viewModelScope.launch(Dispatchers.IO) {
-                    repo.switchLanguage(event.lang)
-                    sendUiEvent(UiEvent.ShowSnackbar("Idioma cambiado a ${event.lang}"))
-                }
-            }
         }
     }
 

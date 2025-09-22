@@ -1,12 +1,10 @@
 package com.example.myslog.db.repository
 
-import android.content.Context
 import com.example.myslog.db.GymDatabase
 import com.example.myslog.db.MysDAO
 import com.example.myslog.db.PopulateDatabaseCallback
 import com.example.myslog.db.entities.*
 import com.example.myslog.ui.DatabaseModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -19,31 +17,15 @@ import javax.inject.Singleton
 class MysRepositoryImpl @Inject constructor(
     private val dao: MysDAO,
     private val db: GymDatabase,
-    private val populateDatabaseCallback: PopulateDatabaseCallback,
-    @ApplicationContext private val context: Context
+    private val populateDatabaseCallback: PopulateDatabaseCallback
 ) : MysRepository {
 
     private val _currentLanguage = MutableStateFlow(populateDatabaseCallback.getCurrentLanguage())
-    override val currentLanguage: Flow<String> = _currentLanguage
+    val currentLanguage: Flow<String> = _currentLanguage
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getExercisesFlow(): Flow<List<Exercise>> =
         _currentLanguage.flatMapLatest { dao.getAllExercises() }
-
-    override suspend fun switchLanguage(lang: String) {
-        withContext(Dispatchers.IO) {
-            _currentLanguage.value = lang
-            clearDatabaseInternal()
-            populateDatabaseCallback.populateFromAssets(lang)
-        }
-    }
-
-    private suspend fun clearDatabaseInternal() {
-        withContext(Dispatchers.IO) {
-            Timber.i("Clearing exercises")
-            dao.clearExercises()
-        }
-    }
 
     override suspend fun clearDatabase() {
         withContext(Dispatchers.IO) {
@@ -53,7 +35,6 @@ class MysRepositoryImpl @Inject constructor(
             populateDatabaseCallback.populateFromAssets(_currentLanguage.value)
         }
     }
-
     override fun getSessionById(sessionId: Long) = dao.getSessionById(sessionId)
     override fun getAllSessions() = dao.getAllSessions()
     override fun getAllSets() = dao.getAllSets()
