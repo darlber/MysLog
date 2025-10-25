@@ -45,6 +45,7 @@ class MainActivity : ComponentActivity() {
         if (BuildConfig.DEBUG) {
             Timber.plant(DebugTree())
         }
+
         setContent {
             AppTheme {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
